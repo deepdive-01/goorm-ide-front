@@ -1,0 +1,21 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        run: |
+          title="${{ github.event.pull_request.title }}"
+          if [[ ! "$title" =~ ^\[COD-[0-9]+\]\ .+ ]]; then
+            echo "PR 제목 형식이 올바르지 않습니다."
+            echo "올바른 형식: [COD-숫자] 내용"
+            echo "현재 제목: $title"
+            exit 1
+          fi
+          echo "PR 제목 형식 확인: $title"
