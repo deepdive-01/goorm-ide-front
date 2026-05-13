@@ -1,0 +1,8 @@
+@import './theme.css';
+@import './typography.css';
+
+html,
+body,
+#root {
+  font-family: 'Pretendard', sans-serif;
+}

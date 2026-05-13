@@ -1,0 +1,32 @@
+/*
+  피그마 스타일 시스템 설정대로 네이밍 해놨습니다
+  text-neon-green | color-gray-100 | bg-background 처럼 사용하시면 됩니다
+*/
+
+@theme {
+  /* Brand */
+  --color-neon-green: #7bf179;
+  --color-neon-blue: #32ebe1;
+
+  /* Background */
+  --color-background: #151515;
+  --color-light-background: #fdfdfd;
+
+  /* Gray */
+  --color-gray-100: #f3f3f3;
+  --color-gray-200: #eaeaea;
+  --color-gray-300: #dadada;
+  --color-gray-400: #b7b7b7;
+  --color-gray-500: #979797;
+  --color-gray-600: #6e6e6e;
+  --color-gray-700: #5b5b5b;
+  --color-gray-800: #3c3c3c;
+  --color-gray-900: #212121;
+
+  /* Base */
+  --color-white: #ffffff;
+  --color-black: #111111;
+
+  /* Status */
+  --color-info: #f59e0b;
+}

@@ -1,0 +1,53 @@
+/*
+  피그마 스타일 시스템 설정대로 네이밍 해놨습니다
+  text-hero | text-body1 처럼 사용하시면 됩니다
+*/
+
+@utility text-hero {
+  font-size: 60px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+@utility text-head1 {
+  font-size: 35px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+@utility text-head2 {
+  font-size: 30px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+@utility text-head3 {
+  font-size: 18px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+@utility text-body1 {
+  font-size: 16px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+
+@utility text-body2 {
+  font-size: 14px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+@utility text-body3 {
+  font-size: 12px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
