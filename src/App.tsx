@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import ScrollToTop from './components/common/ScrollToTop/ScrollToTop'
+import ScrollToTop from '@/components/common/ScrollToTop/ScrollToTop'
 import ExamplePage from '@/pages/ExamplePage'
 
 function App() {
