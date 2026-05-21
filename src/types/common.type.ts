@@ -41,3 +41,8 @@ export interface BadgeProps {
   textColor?: string // Tailwind text 클래스 (기본: text-black)
   ariaLabel: string // 접근성 필수값
 }
+
+export interface PageHeaderProps {
+  children?: React.ReactNode // 텍스트 또는 아이콘 컴포넌트
+  onClick?: () => void | Promise<void>
+}
