@@ -29,7 +29,7 @@ function Button({
       aria-busy={isLoading}
       aria-disabled={isDisabled}
       disabled={isDisabled}
-      className={`text-body1 flex items-center justify-center gap-2 rounded-lg px-4 transition-opacity ${width} ${sizeStyles[size]} ${bgColor ?? ''} ${textColor ?? ''} ${isDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+      className={`text-body2 flex items-center justify-center gap-2 rounded-lg px-4 transition-opacity ${width} ${sizeStyles[size]} ${bgColor ?? ''} ${textColor ?? ''} ${isDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
       onClick={onClick}
     >
       {isLoading && (loadingIndicator ?? <Spinner color={textColor} />)}
