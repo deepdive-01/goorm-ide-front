@@ -3,6 +3,10 @@ import ScrollToTop from './components/common/ScrollToTop/ScrollToTop'
 import ExamplePage from '@/pages/ExamplePage'
 import Header from '@/components/Header/Header'
 import Footer from './components/Footer/Footer'
+import LandingPage from '@/pages/LandingPage'
+import LoginPage from '@/pages/LoginPage'
+import SignupPage from '@/pages/SignupPage'
+import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 
 function App() {
   return (
@@ -10,6 +14,10 @@ function App() {
       <ScrollToTop />
       <Header />
       <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/spaces" element={<SpacesEntryRedirect />} />
         {/* 기본 라우트 */}
         <Route path="/*" element={<ExamplePage />} />
 
