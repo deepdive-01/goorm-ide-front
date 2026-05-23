@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import ScrollToTop from './components/common/ScrollToTop/ScrollToTop'
 import ExamplePage from '@/pages/ExamplePage'
 import LoginPage from '@/pages/LoginPage/LoginPage'
+import SignupPage from '@/pages/SignupPage/SignupPage'
 import Header from '@/components/Header/Header'
 import Footer from './components/Footer/Footer'
 
@@ -11,6 +12,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
         <Route
           path="/*"
