@@ -12,7 +12,11 @@ export interface ButtonProps {
   width?: string // Tailwind width 클래스 사용 가능: 'w-20' | 'w-full' | 'w-auto' 등
   bgColor?: string
   textColor?: string
+  textClassName?: string
+  hoverClassName?: string
   size?: ButtonSize
+  type?: 'button' | 'submit'
+  className?: string
   isLoading?: boolean
   disabled?: boolean
   ariaLabel?: string
