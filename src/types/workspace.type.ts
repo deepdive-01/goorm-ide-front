@@ -20,6 +20,10 @@ export interface WorkspaceListItem {
   member_count: number
   is_active: boolean
   created_at: string
+  /** MSW·목 UI — API 스펙 확정 시 백엔드 필드로 교체 */
+  mentor_name?: string
+  problem_count?: number
+  lecture_count?: number
 }
 
 export interface WorkspaceDetail {
