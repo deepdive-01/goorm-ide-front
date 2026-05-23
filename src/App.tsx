@@ -6,15 +6,19 @@ import SignupPage from '@/pages/SignupPage/SignupPage'
 import AdditionalInfoPage from '@/pages/AdditionalInfoPage/AdditionalInfoPage'
 import Header from '@/components/Header/Header'
 import Footer from './components/Footer/Footer'
+import LandingPage from '@/pages/LandingPage'
+import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 
 function App() {
   return (
     <>
       <ScrollToTop />
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/auth/additional-info" element={<AdditionalInfoPage />} />
+        <Route path="/spaces" element={<SpacesEntryRedirect />} />
 
         <Route
           path="/*"
