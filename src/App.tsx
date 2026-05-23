@@ -14,11 +14,9 @@ function App() {
     <>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/auth/additional-info" element={<AdditionalInfoPage />} />
-        <Route path="/spaces" element={<SpacesEntryRedirect />} />
 
         <Route
           path="/*"
@@ -26,14 +24,17 @@ function App() {
             <>
               <Header />
               <Routes>
-                {/* 기본 라우트 */}
-                <Route path="/*" element={<ExamplePage />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/spaces" element={<SpacesEntryRedirect />} />
 
                 {/* Student 안에 있는 파일은 /student의 경로로 시작 - 임시로 <ExamplePage />로 설정, 개발 후 변경하시면 됩니다! */}
                 <Route path="/student/*" element={<ExamplePage />} />
 
                 {/* Teacher 안에 있는 파일은 /teacher의 경로로 시작 - 임시로 <ExamplePage />로 설정, 개발 후 변경하시면 됩니다! */}
                 <Route path="/teacher/*" element={<ExamplePage />} />
+
+                {/* 기본 라우트 */}
+                <Route path="/*" element={<ExamplePage />} />
               </Routes>
               <Footer />
             </>
