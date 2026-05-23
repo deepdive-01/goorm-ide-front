@@ -13,7 +13,11 @@ function Button({
   width = 'w-fit',
   bgColor = 'bg-neon-green',
   textColor = 'text-black',
+  textClassName = 'text-body2',
+  hoverClassName,
   size = 'lg',
+  type = 'button',
+  className = '',
   isLoading = false,
   disabled = false,
   ariaLabel,
@@ -21,15 +25,20 @@ function Button({
   onClick,
 }: ButtonProps) {
   const isDisabled = isLoading || disabled
+  const interactiveStyles = isDisabled
+    ? 'cursor-not-allowed opacity-50'
+    : hoverClassName
+      ? `cursor-pointer ${hoverClassName}`
+      : 'cursor-pointer hover:brightness-95 active:brightness-90'
 
   return (
     <button
-      type="button"
+      type={type}
       aria-label={ariaLabel}
       aria-busy={isLoading}
       aria-disabled={isDisabled}
       disabled={isDisabled}
-      className={`text-body2 flex items-center justify-center gap-2 rounded-lg px-4 transition-opacity ${width} ${sizeStyles[size]} ${bgColor ?? ''} ${textColor ?? ''} ${isDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+      className={`${textClassName} flex items-center justify-center gap-2 rounded-lg px-4 transition-colors duration-150 ${width} ${sizeStyles[size]} ${bgColor ?? ''} ${textColor ?? ''} ${interactiveStyles} ${className}`}
       onClick={onClick}
     >
       {isLoading && (loadingIndicator ?? <Spinner color={textColor} />)}
