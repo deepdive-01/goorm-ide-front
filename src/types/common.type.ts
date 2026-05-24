@@ -49,4 +49,5 @@ export interface BadgeProps {
 export interface PageHeaderProps {
   children?: React.ReactNode // 텍스트 또는 아이콘 컴포넌트
   onClick?: () => void | Promise<void>
+  className?: string
 }
