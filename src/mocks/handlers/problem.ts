@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { mockProblem, mockProblemBank } from '../fixtures'
+import { mockProblem, mockProblemBank, mockProblemList } from '../fixtures'
 
 export const problemHandlers = [
   http.post('*/api/v1/spaces/:spaceId/problems/import', () =>
@@ -46,19 +46,10 @@ export const problemHandlers = [
       code: 'SUCCESS',
       message: '문항 목록을 조회했습니다.',
       data: {
-        total_count: 1,
+        total_count: mockProblemList.length,
         page: 0,
         size: 20,
-        problems: [
-          {
-            id: mockProblem.id,
-            title: mockProblem.title,
-            difficulty: mockProblem.difficulty,
-            language: mockProblem.language,
-            is_published: mockProblem.is_published,
-            created_at: mockProblem.created_at,
-          },
-        ],
+        problems: mockProblemList,
       },
     }),
   ),
