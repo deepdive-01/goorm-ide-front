@@ -7,7 +7,6 @@ import SpaceCard from '@/components/student/SpaceCard'
 import { STUDENT_SPACES_COPY } from '@/content/studentSpaces'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useWorkspaces } from '@/hooks/useWorkspaces'
-import { getRoleSpacesPath } from '@/lib/authRoutes'
 
 type SpaceListPageProps = {
   role: 'student' | 'teacher'
@@ -19,8 +18,7 @@ function SpaceListPage({ role }: SpaceListPageProps) {
   const { workspaces, isLoading, refetch } = useWorkspaces()
   const [query, setQuery] = useState('')
 
-  const routeId =
-    role === 'student' ? params.studentId : params.teacherId
+  const teacherId = params.teacherId
 
   const filteredWorkspaces = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -37,7 +35,7 @@ function SpaceListPage({ role }: SpaceListPageProps) {
     return (
       <main className="text-body1 text-gray-400 px-4 py-16 text-center">
         강사 학습방 관리
-        <span className="text-gray-600 mt-2 block text-sm">ID: {routeId}</span>
+        <span className="text-gray-600 mt-2 block text-sm">ID: {teacherId}</span>
       </main>
     )
   }
@@ -52,10 +50,6 @@ function SpaceListPage({ role }: SpaceListPageProps) {
 
   if (!user) {
     return <Navigate to="/login" replace />
-  }
-
-  if (routeId && String(user.id) !== routeId) {
-    return <Navigate to={getRoleSpacesPath(user)} replace />
   }
 
   return (

@@ -14,6 +14,15 @@ const SUBMIT_BTN = {
   className: 'h-10 py-0',
 }
 
+const JOIN_CODE_BTN = {
+  size: 'lg' as const,
+  textClassName: 'text-body2',
+  className: 'border-neon-green h-10 gap-2 border px-4 py-0',
+  bgColor: 'bg-transparent',
+  textColor: 'text-neon-green',
+  hoverClassName: 'hover:bg-neon-green/10',
+}
+
 type JoinSpaceDialogProps = {
   onJoined: () => void
 }
@@ -56,14 +65,15 @@ function JoinSpaceDialog({ onJoined }: JoinSpaceDialogProps) {
 
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-body2 text-neon-green border-neon-green hover:bg-neon-green/10 inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg border px-4 transition-colors"
+        ariaLabel={STUDENT_SPACES_COPY.joinCodeButton}
+        {...JOIN_CODE_BTN}
       >
-        <Key className="size-4" aria-hidden />
+        <Key className="size-4 shrink-0" aria-hidden />
         {STUDENT_SPACES_COPY.joinCodeButton}
-      </button>
+      </Button>
 
       {open && (
         <div
