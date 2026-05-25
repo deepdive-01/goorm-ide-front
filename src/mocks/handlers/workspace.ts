@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { mockWorkspace, mockMembers } from '../fixtures'
+import { mockWorkspace, mockMembers, mockWorkspaceList } from '../fixtures'
 
 export const workspaceHandlers = [
   http.post('*/api/v1/spaces', () =>
@@ -24,16 +24,7 @@ export const workspaceHandlers = [
       status: 200,
       code: 'SUCCESS',
       message: '워크스페이스 목록을 조회했습니다.',
-      data: [
-        {
-          id: mockWorkspace.id,
-          name: mockWorkspace.name,
-          description: mockWorkspace.description,
-          member_count: mockWorkspace.member_count,
-          is_active: mockWorkspace.is_active,
-          created_at: mockWorkspace.created_at,
-        },
-      ],
+      data: mockWorkspaceList,
     }),
   ),
 

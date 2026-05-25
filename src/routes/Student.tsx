@@ -1,13 +1,15 @@
-import { Route, Routes } from 'react-router-dom'
-import ExamplePage from '@/pages/ExamplePage'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import SpaceListPage from '@/pages/SpaceListPage'
 
 const Student = () => {
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <Routes>
-        <Route path="/" element={<ExamplePage />} />
-      </Routes>
-    </div>
+    <Routes>
+      <Route
+        path=":studentId/spaces"
+        element={<Navigate to="/student/spaces" replace />}
+      />
+      <Route path="spaces" element={<SpaceListPage role="student" />} />
+    </Routes>
   )
 }
 
