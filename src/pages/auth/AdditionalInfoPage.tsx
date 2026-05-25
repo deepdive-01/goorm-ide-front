@@ -2,6 +2,13 @@ import { type FormEvent, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Logo from '@/components/common/Logo'
 import Button from '@/components/common/Button/Button'
+import {
+  getAdditionalInfoErrorMessage,
+  getRoleHomePath,
+  saveAccessToken,
+  validateEmail,
+  validateRequired,
+} from '@/lib/auth'
 import { oauthSignup } from '@/services/auth'
 import type { UserRole } from '@/types/api.type'
 
@@ -28,13 +35,17 @@ const INPUT_CLASS =
 function AdditionalInfoPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const tempKey = searchParams.get('temp_key') ?? ''
+  const tempKey =
+    searchParams.get('tempKey') ?? searchParams.get('temp_key') ?? ''
   const provider = searchParams.get('provider') ?? ''
+  const roleFromQuery = searchParams.get('role')
 
-  const [role, setRole] = useState<UserRole>('STUDENT')
-  const [name, setName] = useState('')
-  const [nickname, setNickname] = useState('')
-  const [email, setEmail] = useState('')
+  const [role, setRole] = useState<UserRole>(
+    roleFromQuery === 'MENTOR' ? 'MENTOR' : 'STUDENT',
+  )
+  const [name, setName] = useState(searchParams.get('name') ?? '')
+  const [nickname, setNickname] = useState(searchParams.get('nickname') ?? '')
+  const [email, setEmail] = useState(searchParams.get('email') ?? '')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,27 +55,45 @@ function AdditionalInfoPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError(null)
 
     if (!tempKey) {
       setError('유효하지 않은 가입 요청입니다. 다시 소셜 로그인을 시도해 주세요.')
       return
     }
 
+    const nameError = validateRequired(name, '이름을 입력해주세요')
+    if (nameError) {
+      setError(nameError)
+      return
+    }
+
+    const nicknameError = validateRequired(nickname, '닉네임을 입력해주세요')
+    if (nicknameError) {
+      setError(nicknameError)
+      return
+    }
+
+    const emailError = validateEmail(email)
+    if (emailError) {
+      setError(emailError)
+      return
+    }
+
+    setError(null)
     setIsLoading(true)
 
     try {
       const { data } = await oauthSignup({
         temp_key: tempKey,
-        email,
-        name,
-        nickname,
+        email: email.trim(),
+        name: name.trim(),
+        nickname: nickname.trim(),
         role,
       })
-      localStorage.setItem('access_token', data.data.access_token)
-      navigate(role === 'STUDENT' ? '/student' : '/teacher')
-    } catch {
-      setError('가입을 완료하지 못했습니다. 입력 정보를 확인해 주세요.')
+      saveAccessToken(data.data.access_token)
+      navigate(getRoleHomePath(role))
+    } catch (submitError) {
+      setError(getAdditionalInfoErrorMessage(submitError))
     } finally {
       setIsLoading(false)
     }
@@ -75,7 +104,7 @@ function AdditionalInfoPage() {
       <Logo />
 
       <div className="w-full max-w-[424px] rounded-xl border border-gray-800 bg-[#151515] px-7 py-6">
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
           <div className="flex flex-col gap-3 text-center">
             <h1 className="text-[26px] leading-normal font-semibold text-light-background">
               추가 정보
@@ -89,7 +118,10 @@ function AdditionalInfoPage() {
                 key={item}
                 type="button"
                 aria-pressed={role === item}
-                onClick={() => setRole(item)}
+                onClick={() => {
+                  setRole(item)
+                  setError(null)
+                }}
                 className={`text-body2 flex-1 cursor-pointer rounded-md font-normal outline-none transition-colors focus:outline-none focus-visible:outline-none ${
                   role === item
                     ? 'bg-[#151515] text-light-background'
@@ -107,7 +139,10 @@ function AdditionalInfoPage() {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setError(null)
+                }}
                 placeholder="이름을 입력하세요"
                 required
                 className={INPUT_CLASS}
@@ -119,7 +154,10 @@ function AdditionalInfoPage() {
               <input
                 type="text"
                 value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
+                onChange={(e) => {
+                  setNickname(e.target.value)
+                  setError(null)
+                }}
                 placeholder="닉네임을 입력하세요"
                 required
                 className={INPUT_CLASS}
@@ -131,7 +169,10 @@ function AdditionalInfoPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setError(null)
+                }}
                 placeholder="이메일을 입력하세요"
                 required
                 className={INPUT_CLASS}

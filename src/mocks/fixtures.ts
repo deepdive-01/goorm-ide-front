@@ -1,8 +1,11 @@
-// 목업 데이터를 여기서 수정하면 모든 핸들러에 반영됩니다.
+import type { UserRole } from '@/types/api.type'
+import type { UserInfo } from '@/types/user.type'
 import { hoursAgo } from '@/utils/formatRelativeTime'
 
-// true: 로그인 상태로 시작 / false: 비로그인 상태로 시작
-export const MOCK_IS_LOGGED_IN = true
+// MSW에서 재사용하는 공통 fixture와, 인증 흐름을 흉내 내기 위한 in-memory 상태 저장소입니다.
+
+// 개발 편의를 위해 앱 첫 진입 시 mock 로그인 상태로 시작할지 결정합니다.
+export const MOCK_IS_LOGGED_IN = false
 
 if (MOCK_IS_LOGGED_IN) {
   localStorage.setItem('access_token', 'mock-access-token')
@@ -10,7 +13,8 @@ if (MOCK_IS_LOGGED_IN) {
   localStorage.removeItem('access_token')
 }
 
-export const mockUser = {
+// 인증/권한 분기에서 공통으로 쓰는 기본 학생/강사 사용자 fixture입니다.
+export const mockStudentUser: UserInfo = {
   id: 1,
   email: 'test@example.com',
   name: '최유정',
@@ -20,6 +24,132 @@ export const mockUser = {
   created_at: '2025-05-11T13:00:00Z',
 }
 
+export const mockMentorUser: UserInfo = {
+  id: 2,
+  email: 'mentor@example.com',
+  name: '김강사',
+  nickname: '김강사',
+  role: 'MENTOR',
+  profile_image_url: null,
+  created_at: '2025-05-11T13:00:00Z',
+}
+
+// 기존 fixture들이 학생 기준 데이터를 참조하고 있어 남겨둔 하위 호환 alias입니다.
+export const mockUser = mockStudentUser
+
+export function getMockUserByRole(role: UserRole): UserInfo {
+  return role === 'MENTOR' ? mockMentorUser : mockStudentUser
+}
+
+// 이메일 로그인/회원가입 mock이 사용하는 최소 계정 저장 구조입니다.
+interface MockAuthAccount {
+  password: string
+  user: UserInfo
+}
+
+// 테스트/개발 시작 시 기본으로 존재하는 mock 계정들입니다.
+const INITIAL_MOCK_AUTH_ACCOUNTS: Record<string, MockAuthAccount> = {
+  'student@example.com': {
+    password: 'password123',
+    user: mockStudentUser,
+  },
+  'mentor@example.com': {
+    password: 'password123',
+    user: mockMentorUser,
+  },
+}
+
+let mockAuthAccounts: Record<string, MockAuthAccount> = {}
+let issuedAccessTokenUsers = new Map<string, UserInfo>()
+let nextMockUserId = 3
+
+function cloneUser(user: UserInfo): UserInfo {
+  return { ...user }
+}
+
+// 테스트 간 상태가 섞이지 않도록 mock 계정 저장소와 발급 토큰 상태를 초기화합니다.
+export function resetMockAuthState(): void {
+  mockAuthAccounts = Object.fromEntries(
+    Object.entries(INITIAL_MOCK_AUTH_ACCOUNTS).map(([email, account]) => [
+      email,
+      {
+        password: account.password,
+        user: cloneUser(account.user),
+      },
+    ]),
+  )
+  issuedAccessTokenUsers = new Map<string, UserInfo>()
+  nextMockUserId = 3
+}
+
+resetMockAuthState()
+
+export function findMockAccountByEmail(email: string): MockAuthAccount | null {
+  return mockAuthAccounts[email] ?? null
+}
+
+export function isMockEmailTaken(email: string): boolean {
+  return email in mockAuthAccounts
+}
+
+// 이메일 회원가입/소셜 추가가입 후 로그인까지 이어지도록 새 mock 계정을 메모리에 등록합니다.
+export function registerMockAccount(params: {
+  email: string
+  name: string
+  nickname: string
+  password: string
+  role: UserRole
+}): UserInfo {
+  const user: UserInfo = {
+    id: nextMockUserId,
+    email: params.email,
+    name: params.name,
+    nickname: params.nickname,
+    role: params.role,
+    profile_image_url: null,
+    created_at: new Date().toISOString(),
+  }
+
+  nextMockUserId += 1
+  mockAuthAccounts[params.email] = {
+    password: params.password,
+    user,
+  }
+
+  return cloneUser(user)
+}
+
+// 발급한 mock access token과 사용자를 연결해 이후 /users/me 응답에서 복원할 수 있게 합니다.
+export function issueMockAccessToken(
+  user: UserInfo,
+  tokenPrefix = 'mock-access-token',
+): string {
+  const accessToken = `${tokenPrefix}-${user.role.toLowerCase()}-${user.id}`
+  issuedAccessTokenUsers.set(accessToken, cloneUser(user))
+  return accessToken
+}
+
+// Authorization 헤더의 mock token으로 현재 사용자를 복원합니다.
+// 최근 발급된 토큰이 있으면 그 사용자를 우선 사용하고, 없으면 문자열 규칙으로 fallback 합니다.
+export function getMockUserFromAccessToken(
+  accessToken: string | null | undefined,
+): UserInfo {
+  if (accessToken) {
+    const issuedUser = issuedAccessTokenUsers.get(accessToken)
+
+    if (issuedUser) {
+      return cloneUser(issuedUser)
+    }
+  }
+
+  if (accessToken?.toLowerCase().includes('mentor')) {
+    return mockMentorUser
+  }
+
+  return mockStudentUser
+}
+
+// 아래부터는 인증 외 화면에서 재사용하는 정적 도메인 fixture입니다.
 export const mockWorkspace = {
   id: 1,
   name: '파이썬 기초 클래스',
