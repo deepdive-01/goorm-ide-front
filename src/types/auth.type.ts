@@ -1,5 +1,8 @@
 import type { UserRole } from './api.type'
 
+export type OAuthProvider = 'google' | 'kakao'
+export type OAuthIntent = 'login' | 'signup'
+
 export interface SignupRequest {
   email: string
   password: string
@@ -20,6 +23,7 @@ export interface SignupResponse {
 export interface LoginRequest {
   email: string
   password: string
+  role: UserRole
 }
 
 export interface TokenResponse {

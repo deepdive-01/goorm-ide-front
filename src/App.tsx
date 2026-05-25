@@ -4,6 +4,7 @@ import ExamplePage from '@/pages/ExamplePage'
 import LoginPage from '@/pages/LoginPage/LoginPage'
 import SignupPage from '@/pages/SignupPage/SignupPage'
 import AdditionalInfoPage from '@/pages/AdditionalInfoPage/AdditionalInfoPage'
+import OAuthCallbackPage from '@/pages/OAuthCallbackPage/OAuthCallbackPage'
 import Header from '@/components/Header/Header'
 import Footer from './components/Footer/Footer'
 import LandingPage from '@/pages/LandingPage'
@@ -16,7 +17,8 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/auth/additional-info" element={<AdditionalInfoPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/oauth/signup" element={<AdditionalInfoPage />} />
 
         <Route
           path="/*"

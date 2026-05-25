@@ -3,8 +3,11 @@ import '@testing-library/jest-dom'
 // TODO: MSW - API 테스트 (실제 API 연결 후 삭제 예정)
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
 import { server } from '../mocks/server'
+import { resetMockAuthState } from '../mocks/fixtures'
 
 const MSW_ENABLED = import.meta.env.VITE_MSW_ENABLED === 'true'
+
+window.scrollTo = vi.fn()
 
 if (MSW_ENABLED) {
   // 테스트 시작 전 MSW 서버 실행
@@ -19,6 +22,7 @@ if (MSW_ENABLED) {
 
 // 인증이 필요한 API 테스트를 위해 access_token 주입
 beforeEach(() => {
+  resetMockAuthState()
   localStorage.setItem('access_token', 'mock-token')
 })
 

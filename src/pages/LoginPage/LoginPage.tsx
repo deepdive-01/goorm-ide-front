@@ -1,9 +1,18 @@
-import { type FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { type FormEvent, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Logo from '@/components/common/Logo'
 import Button from '@/components/common/Button/Button'
+import {
+  getLoginErrorMessage,
+  getRoleHomePath,
+  saveAccessToken,
+  startSocialAuth,
+  validateEmail,
+  validatePassword,
+} from '@/lib/auth'
 import { login } from '@/services/auth'
 import type { UserRole } from '@/types/api.type'
+import type { OAuthProvider } from '@/types/auth.type'
 
 const ROLE_LABEL: Record<UserRole, string> = {
   STUDENT: '학생',
@@ -22,25 +31,64 @@ const LOGIN_BTN = {
   className: 'h-10 py-0',
 }
 
+const SOCIAL_LOGIN_LABEL: Record<OAuthProvider, string> = {
+  google: 'Google로 로그인',
+  kakao: '카카오 로그인',
+}
+
+function getOauthErrorMessage(errorCode: string | null): string | null {
+  if (!errorCode || errorCode === 'oauth_cancelled') {
+    return null
+  }
+
+  if (errorCode === 'oauth_role_mismatch') {
+    return '선택한 사용자 유형이 올바르지 않습니다'
+  }
+
+  return '인증에 실패했습니다. 다시 시도해주세요.'
+}
+
 function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [role, setRole] = useState<UserRole>('STUDENT')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const oauthErrorMessage = useMemo(
+    () => getOauthErrorMessage(searchParams.get('error')),
+    [searchParams],
+  )
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+
+    const emailError = validateEmail(email)
+    if (emailError) {
+      setError(emailError)
+      return
+    }
+
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      setError(passwordError)
+      return
+    }
+
     setError(null)
     setIsLoading(true)
 
     try {
-      const { data } = await login({ email, password })
-      localStorage.setItem('access_token', data.data.access_token)
-      navigate(role === 'STUDENT' ? '/student' : '/teacher')
-    } catch {
-      setError('이메일 또는 비밀번호를 확인해 주세요.')
+      const { data } = await login({
+        email: email.trim(),
+        password,
+        role,
+      })
+      saveAccessToken(data.data.access_token)
+      navigate(getRoleHomePath(role))
+    } catch (submitError) {
+      setError(getLoginErrorMessage(submitError))
     } finally {
       setIsLoading(false)
     }
@@ -51,7 +99,7 @@ function LoginPage() {
       <Logo />
 
       <div className="w-full max-w-[424px] rounded-xl border border-gray-800 bg-[#151515] px-7 py-6">
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
           <div className="flex flex-col gap-3 text-center">
             <h1 className="text-[26px] leading-normal font-semibold text-light-background">
               로그인
@@ -65,7 +113,10 @@ function LoginPage() {
                   key={item}
                   type="button"
                   aria-pressed={role === item}
-                  onClick={() => setRole(item)}
+                    onClick={() => {
+                      setRole(item)
+                      setError(null)
+                    }}
                   className={`text-body2 flex-1 cursor-pointer rounded-md font-normal outline-none transition-colors focus:outline-none focus-visible:outline-none ${
                     role === item
                       ? 'bg-[#151515] text-light-background'
@@ -83,7 +134,10 @@ function LoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setError(null)
+                }}
                 placeholder="이메일을 입력하세요"
                 required
                 className="text-body1 mt-3 block h-10 w-full rounded-lg border border-gray-800 bg-[#151515] px-3 font-normal text-light-background placeholder:text-body2 placeholder:font-normal placeholder:text-gray-400 focus:border-neon-green focus:outline-none"
@@ -95,7 +149,10 @@ function LoginPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setError(null)
+                }}
                 placeholder="비밀번호를 입력하세요"
                 required
                 className="text-body1 mt-3 block h-10 w-full rounded-lg border border-gray-800 bg-[#151515] px-3 font-normal text-light-background placeholder:text-body2 placeholder:font-normal placeholder:text-gray-400 focus:border-neon-green focus:outline-none"
@@ -103,9 +160,9 @@ function LoginPage() {
             </label>
           </div>
 
-          {error && (
+          {(error ?? oauthErrorMessage) && (
             <p className="text-body3 text-red-400" role="alert">
-              {error}
+              {error ?? oauthErrorMessage}
             </p>
           )}
 
@@ -134,18 +191,34 @@ function LoginPage() {
             <Button
               bgColor="bg-white"
               hoverClassName="hover:bg-gray-100 active:bg-gray-200"
-              ariaLabel="Google로 로그인"
+              ariaLabel={SOCIAL_LOGIN_LABEL.google}
+              disabled={isLoading}
+              onClick={() =>
+                startSocialAuth({
+                  intent: 'login',
+                  provider: 'google',
+                  role,
+                })
+              }
               {...LOGIN_BTN}
             >
-              Google로 로그인
+              {SOCIAL_LOGIN_LABEL.google}
             </Button>
             <Button
               bgColor="bg-[#ffe500]"
               hoverClassName="hover:bg-[#f0d900] active:bg-[#e6cf00]"
-              ariaLabel="카카오 로그인"
+              ariaLabel={SOCIAL_LOGIN_LABEL.kakao}
+              disabled={isLoading}
+              onClick={() =>
+                startSocialAuth({
+                  intent: 'login',
+                  provider: 'kakao',
+                  role,
+                })
+              }
               {...LOGIN_BTN}
             >
-              카카오 로그인
+              {SOCIAL_LOGIN_LABEL.kakao}
             </Button>
           </div>
         </form>

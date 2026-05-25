@@ -1,6 +1,33 @@
 import { render } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
+import {
+  AxiosHeaders,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from 'axios'
+import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
+import type { ApiResponse } from '@/types/api.type'
 
-export const renderWithRouter = (ui: ReactElement) =>
-  render(<BrowserRouter>{ui}</BrowserRouter>)
+interface RenderWithRouterOptions {
+  route?: string
+}
+
+export const renderWithRouter = (
+  ui: ReactElement,
+  { route = '/' }: RenderWithRouterOptions = {},
+) =>
+  render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>)
+
+export function createAxiosResponse<T>(
+  response: ApiResponse<T>,
+): AxiosResponse<ApiResponse<T>> {
+  return {
+    data: response,
+    status: response.status,
+    statusText: 'OK',
+    headers: {},
+    config: {
+      headers: new AxiosHeaders(),
+    } as InternalAxiosRequestConfig,
+  }
+}
