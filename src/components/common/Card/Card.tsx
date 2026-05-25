@@ -9,11 +9,12 @@ function Card({
   children,
   width = 'w-fit',
   cursor = 'default',
+  className,
   onClick,
 }: CardProps) {
   return (
     <div
-      className={`text-body1 bg-background text-light-background rounded-xl border border-gray-800 px-7 py-6 ${width} ${cursorStyles[cursor]}`}
+      className={`text-body1 bg-background text-light-background rounded-xl border border-gray-800 px-7 py-6 ${width} ${cursorStyles[cursor]} ${className ?? ''}`}
       onClick={onClick}
     >
       {children}

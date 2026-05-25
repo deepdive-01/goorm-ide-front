@@ -13,7 +13,7 @@ describe('getRoleSpacesPath', () => {
         profile_image_url: null,
         created_at: '',
       }),
-    ).toBe('/student/1/spaces')
+    ).toBe('/student/spaces')
   })
 
   test('강사 학습방 목록 경로', () => {

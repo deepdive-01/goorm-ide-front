@@ -5,5 +5,5 @@ export function getRoleSpacesPath(user: UserInfo): string {
   if (user.role === 'MENTOR') {
     return `/teacher/${user.id}/spaces`
   }
-  return `/student/${user.id}/spaces`
+  return '/student/spaces'
 }

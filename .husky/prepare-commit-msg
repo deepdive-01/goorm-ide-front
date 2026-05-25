@@ -1,0 +1,4 @@
+# Cursor가 붙이는 Co-authored-by 트레일러 제거
+if [ -n "$1" ] && [ -f "$1" ]; then
+  sed -i.bak '/^Co-authored-by: Cursor /d' "$1" && rm -f "$1.bak"
+fi

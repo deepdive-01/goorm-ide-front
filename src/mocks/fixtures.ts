@@ -1,5 +1,6 @@
 import type { UserRole } from '@/types/api.type'
 import type { UserInfo } from '@/types/user.type'
+import { hoursAgo } from '@/utils/formatRelativeTime'
 
 // MSW에서 재사용하는 공통 fixture와, 인증 흐름을 흉내 내기 위한 in-memory 상태 저장소입니다.
 
@@ -151,15 +152,77 @@ export function getMockUserFromAccessToken(
 // 아래부터는 인증 외 화면에서 재사용하는 정적 도메인 fixture입니다.
 export const mockWorkspace = {
   id: 1,
-  name: '테스트 워크스페이스',
-  description: '테스트 설명',
+  name: '파이썬 기초 클래스',
+  description:
+    '파이썬의 기초 문법과 변수, 제어문 등 프로그래밍의 핵심 개념을 익히고, 간단한 알고리즘 문제를 풀며 실력을 다지는 클래스입니다.',
   is_public: false,
   invite_code: 'ABC12345',
   is_active: true,
-  mentor: { id: 2, nickname: '강사1' },
-  member_count: 3,
+  mentor: { id: 2, nickname: '엄성현' },
+  member_count: 25,
   created_at: '2025-05-11T13:00:00Z',
 }
+
+export const mockWorkspaceList = [
+  {
+    id: 1,
+    name: '파이썬 기초 클래스',
+    description:
+      '파이썬 기초 문법부터 자료구조까지, 프로그래밍의 기초를 탄탄히 다지는 클래스입니다.',
+    member_count: 25,
+    is_active: true,
+    created_at: '2025-05-11T13:00:00Z',
+    mentor_name: '엄성현 강사',
+    problem_count: 12,
+    lecture_count: 12,
+  },
+  {
+    id: 2,
+    name: '알고리즘 심화',
+    description:
+      '정렬, 탐색, 그래프 등 핵심 알고리즘을 문제 풀이 중심으로 학습합니다.',
+    member_count: 18,
+    is_active: true,
+    created_at: '2025-05-12T10:00:00Z',
+    mentor_name: '안건호 강사',
+    problem_count: 20,
+    lecture_count: 15,
+  },
+  {
+    id: 3,
+    name: '웹 개발 입문',
+    description:
+      'HTML, CSS, JavaScript로 반응형 웹 페이지를 직접 만들어 봅니다.',
+    member_count: 32,
+    is_active: true,
+    created_at: '2025-05-13T09:00:00Z',
+    mentor_name: '박강사',
+    problem_count: 10,
+    lecture_count: 8,
+  },
+  {
+    id: 4,
+    name: '데이터베이스 설계',
+    description: 'ERD 설계와 SQL 실습을 통해 데이터 모델링 기초를 익힙니다.',
+    member_count: 14,
+    is_active: true,
+    created_at: '2025-05-14T09:00:00Z',
+    mentor_name: '최강사',
+    problem_count: 8,
+    lecture_count: 6,
+  },
+  {
+    id: 5,
+    name: '자바스크립트 실전',
+    description: 'DOM 조작과 비동기 처리로 실무형 프론트엔드 기초를 다집니다.',
+    member_count: 21,
+    is_active: true,
+    created_at: '2025-05-15T09:00:00Z',
+    mentor_name: '이강사',
+    problem_count: 15,
+    lecture_count: 10,
+  },
+]
 
 export const mockMembers = [
   {
@@ -209,6 +272,40 @@ export const mockProblem = {
   updated_at: '2025-05-11T13:00:00Z',
 }
 
+/** MSW·목 UI — submission_status, testcase_count는 API 스펙 확정 전 목 데이터 */
+export const mockProblemList = [
+  {
+    id: 1,
+    title: '두 수의 합',
+    difficulty: 'EASY' as const,
+    language: 'PYTHON' as const,
+    is_published: true,
+    created_at: '2025-05-11T13:00:00Z',
+    submission_status: 'COMPLETED' as const,
+    testcase_count: 3,
+  },
+  {
+    id: 2,
+    title: '피보나치 수열',
+    difficulty: 'MEDIUM' as const,
+    language: 'PYTHON' as const,
+    is_published: true,
+    created_at: '2025-05-12T10:00:00Z',
+    submission_status: 'SUBMITTED' as const,
+    testcase_count: 4,
+  },
+  {
+    id: 3,
+    title: '이진 탐색 구현',
+    difficulty: 'MEDIUM' as const,
+    language: 'PYTHON' as const,
+    is_published: true,
+    created_at: '2025-05-13T09:00:00Z',
+    submission_status: 'NOT_SUBMITTED' as const,
+    testcase_count: 5,
+  },
+]
+
 export const mockNotification = {
   id: 1,
   type: 'FEEDBACK_RECEIVED' as const,
@@ -216,6 +313,51 @@ export const mockNotification = {
   isRead: false,
   createdAt: '2025-05-11T13:00:00Z',
 }
+
+export const mockNotifications = [
+  {
+    id: 1,
+    type: 'FEEDBACK_RECEIVED' as const,
+    content: `${mockWorkspace.mentor.nickname}님이 피드백을 남겼습니다.`,
+    isRead: false,
+    createdAt: hoursAgo(0.5),
+  },
+  {
+    id: 2,
+    type: 'WORKSPACE_INVITED' as const,
+    content: 'codeRun 워크스페이스에 초대됐습니다.',
+    isRead: true,
+    createdAt: hoursAgo(3),
+  },
+  {
+    id: 3,
+    type: 'SUBMISSION_RECEIVED' as const,
+    content: `${mockWorkspace.name}에서 새 제출물이 있습니다.`,
+    isRead: false,
+    createdAt: hoursAgo(72),
+  },
+  {
+    id: 4,
+    type: 'FEEDBACK_RECEIVED' as const,
+    content: '이전 과제에 대한 피드백이 도착했습니다.',
+    isRead: true,
+    createdAt: hoursAgo(168),
+  },
+  {
+    id: 5,
+    type: 'WORKSPACE_INVITED' as const,
+    content: 'goorm IDE 워크스페이스에 초대됐습니다.',
+    isRead: true,
+    createdAt: hoursAgo(336),
+  },
+  {
+    id: 6,
+    type: 'SUBMISSION_RECEIVED' as const,
+    content: '알고리즘 과제 제출이 완료됐습니다.',
+    isRead: true,
+    createdAt: hoursAgo(504),
+  },
+]
 
 export const mockFeedback = {
   feedback_id: 1,

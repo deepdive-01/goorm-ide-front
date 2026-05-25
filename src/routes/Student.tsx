@@ -1,13 +1,28 @@
-import { Route, Routes } from 'react-router-dom'
-import ExamplePage from '@/pages/ExamplePage'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import ProblemListPage from '@/pages/ProblemListPage'
+import SpaceListPage from '@/pages/SpaceListPage'
+
+function LegacyStudentProblemListRedirect() {
+  const { spaceId } = useParams()
+  return (
+    <Navigate to={`/student/spaces/${spaceId}/problems`} replace />
+  )
+}
 
 const Student = () => {
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <Routes>
-        <Route path="/" element={<ExamplePage />} />
-      </Routes>
-    </div>
+    <Routes>
+      <Route
+        path=":studentId/spaces"
+        element={<Navigate to="/student/spaces" replace />}
+      />
+      <Route
+        path=":studentId/spaces/:spaceId/problems"
+        element={<LegacyStudentProblemListRedirect />}
+      />
+      <Route path="spaces" element={<SpaceListPage role="student" />} />
+      <Route path="spaces/:spaceId/problems" element={<ProblemListPage />} />
+    </Routes>
   )
 }
 

@@ -30,6 +30,7 @@ export interface CardProps {
   children?: React.ReactNode
   width?: string // Tailwind width 클래스 사용 가능: 'w-20' | 'w-full' | 'w-auto' 등
   cursor?: CardCursor
+  className?: string
   onClick?: () => void
 }
 
@@ -49,4 +50,5 @@ export interface BadgeProps {
 export interface PageHeaderProps {
   children?: React.ReactNode // 텍스트 또는 아이콘 컴포넌트
   onClick?: () => void | Promise<void>
+  className?: string
 }
