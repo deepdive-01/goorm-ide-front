@@ -24,7 +24,7 @@ export const mockWorkspace = {
   id: 1,
   name: '파이썬 기초 클래스',
   description:
-    '파이썬 기초 문법부터 자료구조까지, 프로그래밍의 기초를 탄탄히 다지는 클래스입니다.',
+    '파이썬의 기초 문법과 변수, 제어문 등 프로그래밍의 핵심 개념을 익히고, 간단한 알고리즘 문제를 풀며 실력을 다지는 클래스입니다.',
   is_public: false,
   invite_code: 'ABC12345',
   is_active: true,
@@ -141,6 +141,40 @@ export const mockProblem = {
   created_at: '2025-05-11T13:00:00Z',
   updated_at: '2025-05-11T13:00:00Z',
 }
+
+/** MSW·목 UI — submission_status, testcase_count는 API 스펙 확정 전 목 데이터 */
+export const mockProblemList = [
+  {
+    id: 1,
+    title: '두 수의 합',
+    difficulty: 'EASY' as const,
+    language: 'PYTHON' as const,
+    is_published: true,
+    created_at: '2025-05-11T13:00:00Z',
+    submission_status: 'COMPLETED' as const,
+    testcase_count: 3,
+  },
+  {
+    id: 2,
+    title: '피보나치 수열',
+    difficulty: 'MEDIUM' as const,
+    language: 'PYTHON' as const,
+    is_published: true,
+    created_at: '2025-05-12T10:00:00Z',
+    submission_status: 'SUBMITTED' as const,
+    testcase_count: 4,
+  },
+  {
+    id: 3,
+    title: '이진 탐색 구현',
+    difficulty: 'MEDIUM' as const,
+    language: 'PYTHON' as const,
+    is_published: true,
+    created_at: '2025-05-13T09:00:00Z',
+    submission_status: 'NOT_SUBMITTED' as const,
+    testcase_count: 5,
+  },
+]
 
 export const mockNotification = {
   id: 1,
