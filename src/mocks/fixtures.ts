@@ -1,7 +1,6 @@
 import type { UserRole } from '@/types/api.type'
 import type { UserInfo } from '@/types/user.type'
 import type { WorkspaceListItem } from '@/types/workspace.type'
-import { hoursAgo } from '@/utils/formatRelativeTime'
 
 // MSW에서 재사용하는 공통 fixture와, 인증 흐름을 흉내 내기 위한 in-memory 상태 저장소입니다.
 
@@ -361,42 +360,42 @@ export const mockNotifications = [
     type: 'FEEDBACK_RECEIVED' as const,
     content: `${mockWorkspace.mentor.nickname}님이 피드백을 남겼습니다.`,
     isRead: false,
-    createdAt: hoursAgo(0.5),
+    createdAt: '2026-05-25T10:30:00Z',
   },
   {
     id: 2,
     type: 'WORKSPACE_INVITED' as const,
     content: 'codeRun 워크스페이스에 초대됐습니다.',
     isRead: true,
-    createdAt: hoursAgo(3),
+    createdAt: '2026-05-25T09:00:00Z',
   },
   {
     id: 3,
     type: 'SUBMISSION_RECEIVED' as const,
     content: `${mockWorkspace.name}에서 새 제출물이 있습니다.`,
     isRead: false,
-    createdAt: hoursAgo(72),
+    createdAt: '2026-05-22T13:00:00Z',
   },
   {
     id: 4,
     type: 'FEEDBACK_RECEIVED' as const,
     content: '이전 과제에 대한 피드백이 도착했습니다.',
     isRead: true,
-    createdAt: hoursAgo(168),
+    createdAt: '2026-05-18T13:00:00Z',
   },
   {
     id: 5,
     type: 'WORKSPACE_INVITED' as const,
     content: 'goorm IDE 워크스페이스에 초대됐습니다.',
     isRead: true,
-    createdAt: hoursAgo(336),
+    createdAt: '2026-05-11T13:00:00Z',
   },
   {
     id: 6,
     type: 'SUBMISSION_RECEIVED' as const,
     content: '알고리즘 과제 제출이 완료됐습니다.',
     isRead: true,
-    createdAt: hoursAgo(504),
+    createdAt: '2026-05-04T13:00:00Z',
   },
 ]
 
