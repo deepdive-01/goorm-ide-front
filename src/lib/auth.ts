@@ -23,7 +23,7 @@ interface SocialAuthOptions {
 }
 
 export function getRoleHomePath(role: UserRole): string {
-  return role === 'STUDENT' ? '/student' : '/teacher'
+  return role === 'STUDENT' ? '/student/spaces' : '/teacher/spaces'
 }
 
 export function saveAccessToken(token: string): void {

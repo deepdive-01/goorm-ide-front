@@ -27,6 +27,6 @@ describe('getRoleSpacesPath', () => {
         profile_image_url: null,
         created_at: '',
       }),
-    ).toBe('/teacher/2/spaces')
+    ).toBe('/teacher/spaces')
   })
 })

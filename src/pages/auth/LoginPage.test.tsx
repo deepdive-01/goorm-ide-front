@@ -100,7 +100,7 @@ describe('LoginPage', () => {
     })
 
     expect(localStorage.getItem('access_token')).toBe('mentor-token')
-    expect(mockedNavigate).toHaveBeenCalledWith('/teacher')
+    expect(mockedNavigate).toHaveBeenCalledWith('/teacher/spaces')
   })
 
   test('역할 불일치 에러를 사용자 메시지로 보여준다', async () => {

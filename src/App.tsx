@@ -10,6 +10,7 @@ import Footer from './components/Footer/Footer'
 import LandingPage from '@/pages/LandingPage'
 import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 import Student from '@/routes/Student'
+import Teacher from '@/routes/Teacher'
 
 function App() {
   return (
@@ -24,22 +25,23 @@ function App() {
         <Route
           path="/*"
           element={
-            <>
+            <div className="bg-background text-light-background flex min-h-screen flex-col">
               <Header />
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/spaces" element={<SpacesEntryRedirect />} />
+              <div className="flex flex-1 flex-col">
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/spaces" element={<SpacesEntryRedirect />} />
 
-                <Route path="/student/*" element={<Student />} />
+                  <Route path="/student/*" element={<Student />} />
 
-                {/* Teacher 안에 있는 파일은 /teacher의 경로로 시작 - 임시로 <ExamplePage />로 설정, 개발 후 변경하시면 됩니다! */}
-                <Route path="/teacher/*" element={<ExamplePage />} />
+                  <Route path="/teacher/*" element={<Teacher />} />
 
-                {/* 기본 라우트 */}
-                <Route path="/*" element={<ExamplePage />} />
-              </Routes>
+                  {/* 기본 라우트 */}
+                  <Route path="/*" element={<ExamplePage />} />
+                </Routes>
+              </div>
               <Footer />
-            </>
+            </div>
           }
         />
       </Routes>

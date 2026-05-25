@@ -48,7 +48,7 @@ function PropsTable({ rows }: { rows: PropRow[] }) {
 
 function ExamplePage() {
   return (
-    <div className="bg-background grid min-h-screen grid-cols-2 items-start gap-12 p-10">
+    <div className="bg-background grid flex-1 grid-cols-2 items-start gap-12 p-10">
       {/* ── 왼쪽 컬럼: PageHeader / Button / Card ── */}
       <div className="flex flex-col gap-12">
         {/* ── PageHeader ── */}

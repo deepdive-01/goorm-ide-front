@@ -42,9 +42,9 @@ function SpaceListPage({ role }: SpaceListPageProps) {
 
   if (isUserLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
+      <main className="bg-background flex flex-1 items-center justify-center">
         <Spinner size="md" color="text-neon-green" />
-      </div>
+      </main>
     )
   }
 
@@ -53,8 +53,8 @@ function SpaceListPage({ role }: SpaceListPageProps) {
   }
 
   return (
-    <main className="bg-background text-light-background min-h-screen px-4 py-10 sm:px-16 lg:px-22">
-      <div className="mx-auto flex w-full max-w-[1152px] flex-col gap-8">
+    <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
+      <div className="mx-auto flex w-full max-w-[1152px] flex-1 flex-col gap-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <header className="flex flex-col gap-2">
             <h1 className="text-head2 text-white">{STUDENT_SPACES_COPY.title}</h1>

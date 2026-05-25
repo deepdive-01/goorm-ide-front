@@ -129,7 +129,7 @@ describe('SignupPage', () => {
       role: 'STUDENT',
     })
     expect(localStorage.getItem('access_token')).toBe('signup-login-token')
-    expect(mockedNavigate).toHaveBeenCalledWith('/student')
+    expect(mockedNavigate).toHaveBeenCalledWith('/student/spaces')
   })
 
   test('이메일 인증 없이 제출하면 가입을 막는다', async () => {

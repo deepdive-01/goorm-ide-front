@@ -54,7 +54,9 @@ describe('OAuthCallbackPage', () => {
     })
 
     expect(localStorage.getItem('access_token')).toBe('social-access-token')
-    expect(mockedNavigate).toHaveBeenCalledWith('/teacher', { replace: true })
+    expect(mockedNavigate).toHaveBeenCalledWith('/teacher/spaces', {
+      replace: true,
+    })
   })
 
   test('accessToken이 없으면 에러 메시지를 보여준다', async () => {

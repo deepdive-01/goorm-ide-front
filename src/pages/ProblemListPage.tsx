@@ -30,9 +30,9 @@ function ProblemListContent({ spaceId }: { spaceId: number }) {
 
   if (isUserLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
+      <main className="bg-background flex flex-1 items-center justify-center">
         <Spinner size="md" color="text-neon-green" />
-      </div>
+      </main>
     )
   }
 
@@ -42,7 +42,7 @@ function ProblemListContent({ spaceId }: { spaceId: number }) {
 
   if (!isLoading && !workspace) {
     return (
-      <main className="bg-background text-light-background min-h-screen px-4 py-10 sm:px-16 lg:px-22">
+      <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
         <div className="mx-auto w-full max-w-[1152px]">
           <p className="text-body1 text-gray-400 text-center">
             {STUDENT_PROBLEMS_COPY.invalidSpace}
@@ -53,8 +53,8 @@ function ProblemListContent({ spaceId }: { spaceId: number }) {
   }
 
   return (
-    <main className="bg-background text-light-background min-h-screen px-4 py-10 sm:px-16 lg:px-22">
-      <div className="mx-auto flex w-full max-w-[1152px] flex-col gap-10">
+    <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
+      <div className="mx-auto flex w-full max-w-[1152px] flex-1 flex-col gap-10">
         <PageHeader onClick={() => navigate('/student/spaces')}>
           {STUDENT_PROBLEMS_COPY.backToSpaces}
         </PageHeader>
