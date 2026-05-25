@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Key, X } from 'lucide-react'
 import Button from '@/components/common/Button/Button'
 import { joinWorkspace } from '@/services/workspace'
@@ -43,7 +43,7 @@ function JoinSpaceDialog({ onJoined }: JoinSpaceDialogProps) {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open])
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: React.SyntheticEvent) => {
     event.preventDefault()
     const code = inviteCode.trim()
     if (!code) return
@@ -85,7 +85,7 @@ function JoinSpaceDialog({ onJoined }: JoinSpaceDialogProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="border-gray-800 bg-background w-full max-w-md rounded-xl border px-7 py-6"
+            className="bg-background w-full max-w-md rounded-xl border border-gray-800 px-7 py-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-4">
@@ -95,7 +95,7 @@ function JoinSpaceDialog({ onJoined }: JoinSpaceDialogProps) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-gray-500 hover:text-light-background cursor-pointer p-1"
+                className="hover:text-light-background cursor-pointer p-1 text-gray-500"
                 aria-label={STUDENT_SPACES_COPY.joinCancel}
               >
                 <X className="size-5" />
