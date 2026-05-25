@@ -51,3 +51,10 @@
   letter-spacing: -0.02em;
   font-weight: 400;
 }
+
+@utility text-body4 {
+  font-size: 9px;
+  line-height: 140%;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}

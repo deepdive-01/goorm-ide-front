@@ -1,6 +1,13 @@
 import { render } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
+import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 
-export const renderWithRouter = (ui: ReactElement) =>
-  render(<BrowserRouter>{ui}</BrowserRouter>)
+interface RenderWithRouterOptions {
+  route?: string
+}
+
+export const renderWithRouter = (
+  ui: ReactElement,
+  { route = '/' }: RenderWithRouterOptions = {},
+) =>
+  render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>)
