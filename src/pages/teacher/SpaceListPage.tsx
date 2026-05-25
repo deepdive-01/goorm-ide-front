@@ -1,7 +1,7 @@
-import { FolderOpen, Plus } from 'lucide-react'
+import { FolderOpen } from 'lucide-react'
 import { Navigate } from 'react-router-dom'
-import Button from '@/components/common/Button/Button'
 import Spinner from '@/components/common/Spinner/Spinner'
+import CreateSpaceDialog from '@/components/teacher/CreateSpaceDialog'
 import TeacherSpaceCard from '@/components/teacher/TeacherSpaceCard'
 import { TEACHER_SPACES_COPY } from '@/content/teacherSpaces'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -10,7 +10,7 @@ import { getRoleSpacesPath } from '@/lib/authRoutes'
 
 function SpaceListPage() {
   const { user, isLoading: isUserLoading } = useCurrentUser()
-  const { workspaces, isLoading } = useWorkspaces()
+  const { workspaces, isLoading, refetch } = useWorkspaces()
 
   if (isUserLoading) {
     return (
@@ -39,14 +39,7 @@ function SpaceListPage() {
             </p>
           </header>
 
-          <Button
-            ariaLabel={TEACHER_SPACES_COPY.createButtonLabel}
-            textClassName="text-body1"
-            className="self-start px-5"
-          >
-            <Plus className="size-5" aria-hidden />
-            {TEACHER_SPACES_COPY.createButtonLabel}
-          </Button>
+          <CreateSpaceDialog onCreated={refetch} />
         </div>
 
         {isLoading ? (

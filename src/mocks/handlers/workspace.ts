@@ -1,23 +1,43 @@
 import { http, HttpResponse } from 'msw'
-import { mockWorkspace, mockMembers, mockWorkspaceList } from '../fixtures'
+import type { CreateWorkspaceRequest } from '@/types/workspace.type'
+import {
+  createMockWorkspace,
+  getMockUserFromAccessToken,
+  mockMembers,
+  mockWorkspace,
+  mockWorkspaceList,
+} from '../fixtures'
 
 export const workspaceHandlers = [
-  http.post('*/api/v1/spaces', () =>
-    HttpResponse.json({
-      status: 201,
-      code: 'SPACE_CREATE_SUCCESS',
-      message: '워크스페이스가 생성됐습니다.',
-      data: {
-        id: mockWorkspace.id,
-        name: mockWorkspace.name,
-        description: mockWorkspace.description,
-        is_public: mockWorkspace.is_public,
-        invite_code: mockWorkspace.invite_code,
-        is_active: mockWorkspace.is_active,
-        created_at: new Date().toISOString(),
+  http.post('*/api/v1/spaces', async ({ request }) => {
+    const body = (await request.json()) as CreateWorkspaceRequest
+    const authorizationHeader = request.headers.get('Authorization')
+    const accessToken = authorizationHeader?.replace(/^Bearer\s+/i, '') ?? null
+    const user = getMockUserFromAccessToken(accessToken)
+    const createdWorkspace = createMockWorkspace({
+      name: body.name.trim(),
+      description: body.description?.trim(),
+      mentorName: `${user.nickname} 강사`,
+    })
+
+    return HttpResponse.json(
+      {
+        status: 201,
+        code: 'SPACE_CREATE_SUCCESS',
+        message: '워크스페이스가 생성됐습니다.',
+        data: {
+          id: createdWorkspace.id,
+          name: createdWorkspace.name,
+          description: createdWorkspace.description,
+          is_public: false,
+          invite_code: `SPACE${String(createdWorkspace.id).padStart(4, '0')}`,
+          is_active: createdWorkspace.is_active,
+          created_at: createdWorkspace.created_at,
+        },
       },
-    }),
-  ),
+      { status: 201 },
+    )
+  }),
 
   http.get('*/api/v1/spaces', () =>
     HttpResponse.json({
