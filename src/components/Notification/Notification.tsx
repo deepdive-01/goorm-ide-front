@@ -20,7 +20,9 @@ function Notification({ variant }: NotificationProps) {
   const { data, readAll, readOne } = useNotifications()
   const totalCount = data?.totalCount ?? 0
   const unreadCount = data?.unreadCount ?? 0
-  const allNotifications = data?.notifications ?? []
+  const allNotifications = (data?.notifications ?? []).slice().sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )
   const tabFiltered =
     activeTab === 'unread'
       ? allNotifications.filter((n) => !n.isRead)
