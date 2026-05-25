@@ -30,6 +30,7 @@ export interface CardProps {
   children?: React.ReactNode
   width?: string // Tailwind width 클래스 사용 가능: 'w-20' | 'w-full' | 'w-auto' 등
   cursor?: CardCursor
+  className?: string
   onClick?: () => void
 }
 

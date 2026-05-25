@@ -1,4 +1,5 @@
 // 목업 데이터를 여기서 수정하면 모든 핸들러에 반영됩니다.
+import { hoursAgo } from '@/utils/formatRelativeTime'
 
 // true: 로그인 상태로 시작 / false: 비로그인 상태로 시작
 export const MOCK_IS_LOGGED_IN = true
@@ -86,6 +87,51 @@ export const mockNotification = {
   isRead: false,
   createdAt: '2025-05-11T13:00:00Z',
 }
+
+export const mockNotifications = [
+  {
+    id: 1,
+    type: 'FEEDBACK_RECEIVED' as const,
+    content: `${mockWorkspace.mentor.nickname}님이 피드백을 남겼습니다.`,
+    isRead: false,
+    createdAt: hoursAgo(0.5),
+  },
+  {
+    id: 2,
+    type: 'WORKSPACE_INVITED' as const,
+    content: 'codeRun 워크스페이스에 초대됐습니다.',
+    isRead: true,
+    createdAt: hoursAgo(3),
+  },
+  {
+    id: 3,
+    type: 'SUBMISSION_RECEIVED' as const,
+    content: `${mockWorkspace.name}에서 새 제출물이 있습니다.`,
+    isRead: false,
+    createdAt: hoursAgo(72),
+  },
+  {
+    id: 4,
+    type: 'FEEDBACK_RECEIVED' as const,
+    content: '이전 과제에 대한 피드백이 도착했습니다.',
+    isRead: true,
+    createdAt: hoursAgo(168),
+  },
+  {
+    id: 5,
+    type: 'WORKSPACE_INVITED' as const,
+    content: 'goorm IDE 워크스페이스에 초대됐습니다.',
+    isRead: true,
+    createdAt: hoursAgo(336),
+  },
+  {
+    id: 6,
+    type: 'SUBMISSION_RECEIVED' as const,
+    content: '알고리즘 과제 제출이 완료됐습니다.',
+    isRead: true,
+    createdAt: hoursAgo(504),
+  },
+]
 
 export const mockFeedback = {
   feedback_id: 1,
