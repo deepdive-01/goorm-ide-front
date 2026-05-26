@@ -77,7 +77,7 @@ describe('AdditionalInfoPage', () => {
     })
 
     expect(localStorage.getItem('access_token')).toBe('oauth-mentor-token')
-    expect(mockedNavigate).toHaveBeenCalledWith('/teacher')
+    expect(mockedNavigate).toHaveBeenCalledWith('/teacher/spaces')
   })
 
   test('temp_key 없이 접근하면 제출을 막는다', async () => {

@@ -1,15 +1,19 @@
 import {
+  createMockWorkspace,
   findMockAccountByEmail,
   getMockUserByRole,
   getMockUserFromAccessToken,
   issueMockAccessToken,
+  mockWorkspaceList,
   registerMockAccount,
   resetMockAuthState,
+  resetMockWorkspaceState,
 } from '@/mocks/fixtures'
 
 describe('mock auth fixtures', () => {
   beforeEach(() => {
     resetMockAuthState()
+    resetMockWorkspaceState()
   })
 
   test('role에 따라 mock user를 반환한다', () => {
@@ -46,5 +50,27 @@ describe('mock auth fixtures', () => {
       'new-user@example.com',
     )
     expect(getMockUserFromAccessToken(accessToken).role).toBe('MENTOR')
+  })
+
+  test('새 mock workspace를 생성하면 목록 앞에 추가되고 초기화할 수 있다', () => {
+    const initialLength = mockWorkspaceList.length
+
+    const createdWorkspace = createMockWorkspace({
+      name: '새 스페이스',
+      description: '새로운 스페이스 설명',
+      mentorName: '김강사 강사',
+    })
+
+    expect(mockWorkspaceList).toHaveLength(initialLength + 1)
+    expect(mockWorkspaceList[0]?.id).toBe(createdWorkspace.id)
+    expect(mockWorkspaceList[0]?.name).toBe('새 스페이스')
+    expect(mockWorkspaceList[0]?.mentor_name).toBe('김강사 강사')
+
+    resetMockWorkspaceState()
+
+    expect(mockWorkspaceList).toHaveLength(initialLength)
+    expect(mockWorkspaceList.some((workspace) => workspace.id === createdWorkspace.id)).toBe(
+      false,
+    )
   })
 })

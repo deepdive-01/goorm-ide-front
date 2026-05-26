@@ -12,9 +12,9 @@ export default function SpacesEntryRedirect() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
+      <main className="bg-background flex flex-1 items-center justify-center">
         <Spinner size="md" color="text-neon-green" />
-      </div>
+      </main>
     )
   }
 

@@ -1,5 +1,6 @@
 import {
   buildSocialAuthUrl,
+  getRoleHomePath,
   validateEmail,
   validatePassword,
 } from '@/lib/auth'
@@ -25,6 +26,11 @@ describe('auth utils', () => {
     expect(validatePassword('')).toBe('비밀번호를 입력해주세요')
     expect(validatePassword('1234567')).toBe('비밀번호는 8자 이상 입력해주세요')
     expect(validatePassword('password123')).toBeNull()
+  })
+
+  test('역할별 기본 진입 경로를 반환한다', () => {
+    expect(getRoleHomePath('STUDENT')).toBe('/student/spaces')
+    expect(getRoleHomePath('MENTOR')).toBe('/teacher/spaces')
   })
 
   test('실서비스 환경에서는 OAuth 시작 URL을 생성한다', () => {

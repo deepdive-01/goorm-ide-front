@@ -11,9 +11,9 @@ function LandingPage() {
 
   if (isLoading) {
     return (
-      <div className="bg-background flex min-h-[50vh] items-center justify-center">
+      <main className="bg-background flex flex-1 items-center justify-center">
         <Spinner size="md" color="text-neon-green" />
-      </div>
+      </main>
     )
   }
 
@@ -22,7 +22,7 @@ function LandingPage() {
   }
 
   return (
-    <main className="bg-background text-white min-h-screen">
+    <main className="bg-background text-white flex-1">
       <HeroSection />
       <FeatureSection />
       <ShowcaseSection />

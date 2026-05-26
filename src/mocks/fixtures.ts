@@ -1,5 +1,6 @@
 import type { UserRole } from '@/types/api.type'
 import type { UserInfo } from '@/types/user.type'
+import type { WorkspaceListItem } from '@/types/workspace.type'
 
 // MSW에서 재사용하는 공통 fixture와, 인증 흐름을 흉내 내기 위한 in-memory 상태 저장소입니다.
 
@@ -162,7 +163,7 @@ export const mockWorkspace = {
   created_at: '2025-05-11T13:00:00Z',
 }
 
-export const mockWorkspaceList = [
+const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
   {
     id: 1,
     name: '파이썬 기초 클래스',
@@ -222,6 +223,46 @@ export const mockWorkspaceList = [
     lecture_count: 10,
   },
 ]
+
+export let mockWorkspaceList: WorkspaceListItem[] = []
+let nextMockWorkspaceId = 1
+
+function cloneWorkspaceListItem(workspace: WorkspaceListItem): WorkspaceListItem {
+  return { ...workspace }
+}
+
+export function resetMockWorkspaceState(): void {
+  mockWorkspaceList = INITIAL_MOCK_WORKSPACE_LIST.map(cloneWorkspaceListItem)
+  nextMockWorkspaceId =
+    INITIAL_MOCK_WORKSPACE_LIST.reduce((maxId, workspace) => {
+      return Math.max(maxId, workspace.id)
+    }, 0) + 1
+}
+
+export function createMockWorkspace(params: {
+  name: string
+  description?: string
+  mentorName?: string
+}): WorkspaceListItem {
+  const createdWorkspace: WorkspaceListItem = {
+    id: nextMockWorkspaceId,
+    name: params.name,
+    description: params.description ?? '',
+    member_count: 1,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    mentor_name: params.mentorName ?? `${mockMentorUser.nickname} 강사`,
+    problem_count: 0,
+    lecture_count: 0,
+  }
+
+  nextMockWorkspaceId += 1
+  mockWorkspaceList = [createdWorkspace, ...mockWorkspaceList]
+
+  return cloneWorkspaceListItem(createdWorkspace)
+}
+
+resetMockWorkspaceState()
 
 export const mockMembers = [
   {
