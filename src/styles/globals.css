@@ -12,5 +12,6 @@
 html,
 body,
 #root {
+  height: 100%;
   font-family: 'Pretendard', sans-serif;
 }

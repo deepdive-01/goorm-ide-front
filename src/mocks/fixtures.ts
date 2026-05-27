@@ -7,10 +7,12 @@ import type { WorkspaceListItem } from '@/types/workspace.type'
 // 개발 편의를 위해 앱 첫 진입 시 mock 로그인 상태로 시작할지 결정합니다.
 export const MOCK_IS_LOGGED_IN = false
 
-if (MOCK_IS_LOGGED_IN) {
-  localStorage.setItem('access_token', 'mock-access-token')
-} else {
-  localStorage.removeItem('access_token')
+if (import.meta.env.VITE_MSW_ENABLED === 'true') {
+  if (MOCK_IS_LOGGED_IN) {
+    localStorage.setItem('access_token', 'mock-access-token')
+  } else {
+    localStorage.removeItem('access_token')
+  }
 }
 
 // 인증/권한 분기에서 공통으로 쓰는 기본 학생/강사 사용자 fixture입니다.
@@ -227,7 +229,9 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
 export let mockWorkspaceList: WorkspaceListItem[] = []
 let nextMockWorkspaceId = 1
 
-function cloneWorkspaceListItem(workspace: WorkspaceListItem): WorkspaceListItem {
+function cloneWorkspaceListItem(
+  workspace: WorkspaceListItem,
+): WorkspaceListItem {
   return { ...workspace }
 }
 
