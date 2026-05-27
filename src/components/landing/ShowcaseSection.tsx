@@ -7,7 +7,7 @@ const { showcase } = LANDING_COPY
 function ShowcaseSection() {
   return (
     <section className="px-4 pb-24 sm:px-16" aria-labelledby="showcase-heading">
-      <div className="border-gray-800 bg-gray-900 mx-auto max-w-[1152px] overflow-hidden rounded-xl border">
+      <div className="border-gray-800 bg-background mx-auto max-w-[1152px] overflow-hidden rounded-xl border">
         <div className="grid lg:grid-cols-2">
           <div className="flex flex-col justify-center gap-6 p-8 sm:p-12">
             <h2
