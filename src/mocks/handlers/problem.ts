@@ -1,5 +1,10 @@
 import { http, HttpResponse } from 'msw'
-import { mockProblem, mockProblemBank, mockProblemList } from '../fixtures'
+import {
+  mockProblem,
+  mockProblemBank,
+  mockProblemList,
+  mockProblemsById,
+} from '../fixtures'
 
 export const problemHandlers = [
   http.post('*/api/v1/spaces/:spaceId/problems/import', () =>
@@ -54,14 +59,19 @@ export const problemHandlers = [
     }),
   ),
 
-  http.get('*/api/v1/spaces/:spaceId/problems/:problemId', () =>
-    HttpResponse.json({
+  http.get('*/api/v1/spaces/:spaceId/problems/:problemId', ({ params }) => {
+    const problemId = Number(params.problemId)
+    const problem =
+      mockProblemsById[problemId as keyof typeof mockProblemsById] ??
+      mockProblem
+
+    return HttpResponse.json({
       status: 200,
       code: 'SUCCESS',
       message: '문항 상세 정보를 조회했습니다.',
-      data: mockProblem,
-    }),
-  ),
+      data: problem,
+    })
+  }),
 
   http.patch('*/api/v1/spaces/:spaceId/problems/:problemId', () =>
     HttpResponse.json({
