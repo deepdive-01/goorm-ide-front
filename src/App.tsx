@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import ScrollToTop from './components/common/ScrollToTop/ScrollToTop'
 import ExamplePage from '@/pages/ExamplePage'
 import LoginPage from '@/pages/auth/LoginPage'
@@ -12,6 +12,32 @@ import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 import Student from '@/routes/Student'
 import Teacher from '@/routes/Teacher'
 import EditorExample from './pages/EditorExample'
+import { shouldShowFooter } from '@/lib/footerVisibility'
+
+function AppShell() {
+  const { pathname } = useLocation()
+  const showFooter = shouldShowFooter(pathname)
+
+  return (
+    <div className="bg-background text-light-background flex min-h-screen flex-col">
+      <Header />
+      <div className="flex flex-1 flex-col">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/spaces" element={<SpacesEntryRedirect />} />
+
+          <Route path="/student/*" element={<Student />} />
+
+          <Route path="/teacher/*" element={<Teacher />} />
+
+          {/* 기본 라우트 */}
+          <Route path="/*" element={<ExamplePage />} />
+        </Routes>
+      </div>
+      {showFooter && <Footer />}
+    </div>
+  )
+}
 
 function App() {
   return (
@@ -24,28 +50,7 @@ function App() {
         <Route path="/oauth/signup" element={<AdditionalInfoPage />} />
         <Route path="/editorExample" element={<EditorExample />} />
 
-        <Route
-          path="/*"
-          element={
-            <div className="bg-background text-light-background flex min-h-screen flex-col">
-              <Header />
-              <div className="flex flex-1 flex-col">
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/spaces" element={<SpacesEntryRedirect />} />
-
-                  <Route path="/student/*" element={<Student />} />
-
-                  <Route path="/teacher/*" element={<Teacher />} />
-
-                  {/* 기본 라우트 */}
-                  <Route path="/*" element={<ExamplePage />} />
-                </Routes>
-              </div>
-              <Footer />
-            </div>
-          }
-        />
+        <Route path="/*" element={<AppShell />} />
       </Routes>
     </>
   )

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import ProblemListPage from '@/pages/ProblemListPage'
+import ProblemWorkspacePage from '@/pages/ProblemWorkspacePage'
 import SpaceListPage from '@/pages/SpaceListPage'
 
 function LegacyStudentProblemListRedirect() {
@@ -12,6 +13,7 @@ function LegacyStudentProblemListRedirect() {
 const Student = () => {
   return (
     <Routes>
+      <Route index element={<Navigate to="spaces" replace />} />
       <Route
         path=":studentId/spaces"
         element={<Navigate to="/student/spaces" replace />}
@@ -22,6 +24,10 @@ const Student = () => {
       />
       <Route path="spaces" element={<SpaceListPage role="student" />} />
       <Route path="spaces/:spaceId/problems" element={<ProblemListPage />} />
+      <Route
+        path="spaces/:spaceId/problems/:problemId"
+        element={<ProblemWorkspacePage />}
+      />
     </Routes>
   )
 }

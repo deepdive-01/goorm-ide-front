@@ -15,3 +15,26 @@ body,
   height: 100%;
   font-family: 'Pretendard', sans-serif;
 }
+
+.scrollbar-theme {
+  scrollbar-color: var(--color-gray-800) var(--color-gray-900);
+  scrollbar-width: thin;
+}
+
+.scrollbar-theme::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-theme::-webkit-scrollbar-track {
+  background: var(--color-gray-900);
+  border-radius: 4px;
+}
+
+.scrollbar-theme::-webkit-scrollbar-thumb {
+  background: var(--color-gray-800);
+  border-radius: 4px;
+}
+
+.scrollbar-theme::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-700);
+}
