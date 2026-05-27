@@ -2,30 +2,35 @@ import { useState } from 'react'
 import CodeEditor from './CodeEditor'
 import ResultPanel from './ResultPanel'
 import EditorToolbar from './EditorToolbar'
-import type { Language } from '@/types/editor.type'
+import { executeCode } from '@/services/codeExecutionService'
+import type { Language, ExecutionResult, EditorProps } from '@/types/editor.type'
 
-interface EditorProps {
-  roomId: number
-  height?: string
-  width?: string
-}
-
-function Editor({ roomId: _, height = '100%', width = 'w-fit' }: EditorProps) {
+function Editor({ roomId, height = '100%', width = 'w-fit', testCases = [] }: EditorProps) {
   const [code, setCode] = useState('')
-  const [language] = useState<Language>('python')
+  const [language, setLanguage] = useState<Language>('python')
+  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null)
+
+  const handleRun = async () => {
+    const result = await executeCode({ roomId, language, code })
+    setExecutionResult(result)
+  }
 
   return (
     <div
       className={`bg-background ${width} min-w-150 rounded-xl border border-gray-800`}
     >
-      <EditorToolbar />
+      <EditorToolbar
+        language={language}
+        onLanguageChange={setLanguage}
+        onRun={handleRun}
+      />
       <CodeEditor
         code={code}
         language={language}
         height={height}
         onChange={setCode}
       />
-      <ResultPanel />
+      <ResultPanel executionResult={executionResult} testCases={testCases} />
     </div>
   )
 }

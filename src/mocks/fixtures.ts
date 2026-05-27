@@ -422,6 +422,23 @@ export const mockTimer = {
   status: 'RUNNING' as const,
 }
 
+export const mockCodeExecution = {
+  status: 200,
+  code: 'SUCCESS',
+  message: '코드 실행 성공',
+  data: {
+    stdout: '8\n4\n',
+    stderr: '',
+    exitCode: 0,
+    executionTime: 0.123,
+  },
+}
+
+export const mockTestCases = [
+  { input: '3 5', expectedOutput: '8' },
+  { input: '-3 7', expectedOutput: '4' },
+]
+
 export const mockSubmission = {
   submission_id: 1,
   student_id: mockUser.id,

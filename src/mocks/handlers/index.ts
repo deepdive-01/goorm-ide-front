@@ -9,6 +9,7 @@ import { feedbackHandlers } from './feedback'
 import { timerHandlers } from './timer'
 import { submissionHandlers } from './submission'
 import { fileHandlers } from './file'
+import { codeExecutionHandlers } from './codeExecution'
 
 export const handlers = [
   http.get('*/test', () => HttpResponse.json({ message: 'success' })),
@@ -22,4 +23,5 @@ export const handlers = [
   ...timerHandlers,
   ...submissionHandlers,
   ...fileHandlers,
+  ...codeExecutionHandlers,
 ]

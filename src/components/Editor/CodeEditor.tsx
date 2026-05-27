@@ -1,6 +1,6 @@
 import MonacoEditor from '@monaco-editor/react'
 import type { Monaco } from '@monaco-editor/react'
-import type { Language } from '@/types/editor.type'
+import type { Language, CodeEditorProps } from '@/types/editor.type'
 
 function defineGoormTheme(monaco: Monaco) {
   monaco.editor.defineTheme('goorm-dark', {
@@ -21,13 +21,6 @@ const MONACO_LANGUAGE_MAP: Record<Language, string> = {
   java: 'java',
   javascript: 'javascript',
   cpp: 'cpp',
-}
-
-interface CodeEditorProps {
-  code: string
-  language: Language
-  height?: string
-  onChange: (code: string) => void
 }
 
 function CodeEditor({

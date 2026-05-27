@@ -1,11 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Play, Send, Save } from 'lucide-react'
 import Button from '@/components/common/Button/Button'
+import type { Language, EditorToolbarProps } from '@/types/editor.type'
 
-const LANGUAGES = ['Python', 'Java', 'JavaScript', 'C++'] as const
+const LANGUAGE_DISPLAY: Record<Language, string> = {
+  python: 'Python',
+  java: 'Java',
+  javascript: 'JavaScript',
+  cpp: 'C++',
+}
 
-function EditorToolbar() {
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('Python')
+const LANGUAGES = Object.keys(LANGUAGE_DISPLAY) as Language[]
+
+function EditorToolbar({ language, onLanguageChange, onRun }: EditorToolbarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -31,7 +38,7 @@ function EditorToolbar() {
       <div className="flex items-center gap-5">
         <div ref={dropdownRef} className="relative">
           <Button
-            ariaLabel="select-lan"
+            ariaLabel="select-language"
             bgColor="bg-transparent"
             textClassName="text-body2"
             textColor="text-neon-green"
@@ -39,7 +46,7 @@ function EditorToolbar() {
             size="md"
             onClick={() => setIsOpen((prev) => !prev)}
           >
-            {selectedLanguage}
+            {LANGUAGE_DISPLAY[language]}
             <ChevronDown size={18} />
           </Button>
 
@@ -48,13 +55,13 @@ function EditorToolbar() {
               {LANGUAGES.map((lang) => (
                 <li key={lang}>
                   <button
-                    className={`text-body2 w-full px-4 py-2 text-left hover:bg-gray-900 ${lang === selectedLanguage ? 'text-neon-green' : 'hover:text-neon-green text-gray-300'}`}
+                    className={`text-body2 w-full px-4 py-2 text-left hover:bg-gray-900 ${lang === language ? 'text-neon-green' : 'hover:text-neon-green text-gray-300'}`}
                     onClick={() => {
-                      setSelectedLanguage(lang)
+                      onLanguageChange(lang)
                       setIsOpen(false)
                     }}
                   >
-                    {lang}
+                    {LANGUAGE_DISPLAY[lang]}
                   </button>
                 </li>
               ))}
@@ -69,13 +76,14 @@ function EditorToolbar() {
           textColor="text-light-background"
           className="border border-gray-800"
           size="md"
+          onClick={onRun}
         >
           <Play size={15} />
           실행
         </Button>
 
         <Button
-          ariaLabel="run"
+          ariaLabel="save"
           bgColor="bg-transparent"
           textClassName="text-body2"
           textColor="text-light-background"
@@ -87,10 +95,10 @@ function EditorToolbar() {
         </Button>
 
         <Button
-          ariaLabel="run"
+          ariaLabel="submit"
           bgColor="bg-neon-green"
           textClassName="text-body2"
-          textColor="text-background "
+          textColor="text-background"
           size="md"
         >
           <Send size={15} />

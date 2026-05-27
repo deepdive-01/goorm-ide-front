@@ -8,8 +8,7 @@ import {
   SquareArrowRightEnter,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-
-type TabId = '실행결과' | '테스트케이스' | '에러'
+import type { TabId, ResultPanelProps } from '@/types/editor.type'
 
 const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: '실행결과', label: '실행 결과', icon: Terminal },
@@ -17,12 +16,11 @@ const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: '에러', label: '에러', icon: SearchAlert },
 ]
 
-interface ResultPanelProps {
-  error?: string | null
-}
-
-function ResultPanel({ error = null }: ResultPanelProps) {
+function ResultPanel({ executionResult = null, testCases = [] }: ResultPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId>('실행결과')
+
+  const stdoutLines =
+    executionResult?.stdout.split('\n').filter((line) => line !== '') ?? []
 
   return (
     <div>
@@ -52,15 +50,15 @@ function ResultPanel({ error = null }: ResultPanelProps) {
             <div className="text-body3 text-gray-600">에러</div>
           </div>
 
-          {error ? (
-            <div className="text-body3 text-red-400">{error}</div>
+          {executionResult?.stderr ? (
+            <div className="text-body3 text-red-400">{executionResult.stderr}</div>
           ) : (
             <div className="text-body3 text-gray-600">__</div>
           )}
         </div>
       )}
 
-      {/* 3열 콘텐츠 (항상 표시) */}
+      {/* 3열 콘텐츠 */}
       {activeTab !== '에러' && (
         <div className="flex px-7 py-5">
           {/* 실행결과 */}
@@ -71,8 +69,11 @@ function ResultPanel({ error = null }: ResultPanelProps) {
             </div>
 
             <div className="text-body3 text-neon-blue flex flex-col justify-start gap-2">
-              <div>8</div>
-              <div>4</div>
+              {stdoutLines.length > 0 ? (
+                stdoutLines.map((line, i) => <div key={i}>{line}</div>)
+              ) : (
+                <div className="text-gray-600">__</div>
+              )}
             </div>
           </div>
 
@@ -83,15 +84,18 @@ function ResultPanel({ error = null }: ResultPanelProps) {
               <div className="text-body3 text-gray-600">테스트 케이스</div>
             </div>
 
-            <div className="text-body3 flex justify-start gap-2">
-              <div className="text-neon-blue">TC 1</div>
-              <div className="text-gray-600">입력: 3 5 → 출력: 8</div>
-            </div>
-
-            <div className="text-body3 flex justify-start gap-2">
-              <div className="text-neon-blue">TC 2</div>
-              <div className="text-gray-600">입력: -3 7 → 출력: 4</div>
-            </div>
+            {testCases.length > 0 ? (
+              testCases.map((tc, i) => (
+                <div key={i} className="text-body3 flex justify-start gap-2">
+                  <div className="text-neon-blue">TC {i + 1}</div>
+                  <div className="text-gray-600">
+                    입력: {tc.input} → 출력: {tc.expectedOutput}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-body3 text-gray-600">__</div>
+            )}
           </div>
 
           {/* 실행 정보 */}
@@ -103,7 +107,7 @@ function ResultPanel({ error = null }: ResultPanelProps) {
               </div>
 
               <div className="text-neon-blue text-body3 text-semibold">
-                0.123S
+                {executionResult ? `${executionResult.executionTime}S` : '__'}
               </div>
             </div>
 
@@ -113,7 +117,9 @@ function ResultPanel({ error = null }: ResultPanelProps) {
                 <div className="text-body3">종료 코드</div>
               </div>
 
-              <div className="text-neon-blue text-body3 text-semibold">0</div>
+              <div className="text-neon-blue text-body3 text-semibold">
+                {executionResult ? executionResult.exitCode : '__'}
+              </div>
             </div>
           </div>
         </div>
