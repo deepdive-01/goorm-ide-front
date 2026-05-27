@@ -11,6 +11,7 @@ import LandingPage from '@/pages/LandingPage'
 import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 import Student from '@/routes/Student'
 import Teacher from '@/routes/Teacher'
+import EditorExample from './pages/EditorExample'
 import { shouldShowFooter } from '@/lib/footerVisibility'
 
 function AppShell() {
@@ -47,6 +48,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         <Route path="/oauth/signup" element={<AdditionalInfoPage />} />
+        <Route path="/editorExample" element={<EditorExample />} />
 
         <Route path="/*" element={<AppShell />} />
       </Routes>
