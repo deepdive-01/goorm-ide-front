@@ -12,6 +12,7 @@ import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 import Student from '@/routes/Student'
 import Teacher from '@/routes/Teacher'
 import EditorExample from './pages/EditorExample'
+import Mypage from './pages/Mypage/Mypage'
 import { shouldShowFooter } from '@/lib/footerVisibility'
 
 function AppShell() {
@@ -49,6 +50,7 @@ function App() {
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         <Route path="/oauth/signup" element={<AdditionalInfoPage />} />
         <Route path="/editorExample" element={<EditorExample />} />
+        <Route path="/mypage" element={<Mypage />} />
 
         <Route path="/*" element={<AppShell />} />
       </Routes>
