@@ -294,8 +294,36 @@ export const mockProblemBank = {
   created_at: '2025-05-11T13:00:00Z',
 }
 
-export const mockProblem = {
+export const mockProblemSum = {
   id: 1,
+  space_id: mockWorkspace.id,
+  created_by: mockWorkspace.mentor.id,
+  problem_bank_id: null as number | null,
+  title: '두 수의 합',
+  description:
+    '두 정수 a, b가 주어졌을 때, a와 b의 합을 반환하는 함수를 작성하세요.',
+  difficulty: 'EASY' as const,
+  language: 'PYTHON' as const,
+  starter_code: `# 두 수를 입력받아 합을 출력하세요
+a, b = map(int, input().split())
+# 여기에 코드를 작성하세요
+print(a + b)`,
+  is_published: true,
+  testcases: [
+    {
+      id: 1,
+      input: '3 5',
+      expected_output: '8',
+      is_hidden: false,
+      order_num: 0,
+    },
+  ],
+  created_at: '2025-05-11T13:00:00Z',
+  updated_at: '2025-05-11T13:00:00Z',
+}
+
+export const mockProblemFibonacci = {
+  id: 2,
   space_id: mockWorkspace.id,
   created_by: mockWorkspace.mentor.id,
   problem_bank_id: null as number | null,
@@ -308,9 +336,41 @@ export const mockProblem = {
   testcases: [
     { id: 1, input: '5', expected_output: '5', is_hidden: false, order_num: 0 },
   ],
-  created_at: '2025-05-11T13:00:00Z',
-  updated_at: '2025-05-11T13:00:00Z',
+  created_at: '2025-05-12T10:00:00Z',
+  updated_at: '2025-05-12T10:00:00Z',
 }
+
+export const mockProblemBinarySearch = {
+  id: 3,
+  space_id: mockWorkspace.id,
+  created_by: mockWorkspace.mentor.id,
+  problem_bank_id: null as number | null,
+  title: '이진 탐색 구현',
+  description: '정렬된 배열에서 target의 인덱스를 찾으세요.',
+  difficulty: 'MEDIUM' as const,
+  language: 'PYTHON' as const,
+  starter_code: 'def binary_search(nums, target):\n    pass',
+  is_published: true,
+  testcases: [
+    {
+      id: 1,
+      input: '5\n1 2 3 4 5',
+      expected_output: '2',
+      is_hidden: false,
+      order_num: 0,
+    },
+  ],
+  created_at: '2025-05-13T09:00:00Z',
+  updated_at: '2025-05-13T09:00:00Z',
+}
+
+export const mockProblemsById = {
+  1: mockProblemSum,
+  2: mockProblemFibonacci,
+  3: mockProblemBinarySearch,
+} as const
+
+export const mockProblem = mockProblemSum
 
 /** MSW·목 UI — submission_status, testcase_count는 API 스펙 확정 전 목 데이터 */
 export const mockProblemList = [
