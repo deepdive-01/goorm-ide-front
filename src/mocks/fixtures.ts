@@ -521,3 +521,23 @@ export const mockSubmission = {
   submitted_at: '2025-05-11T13:00:00Z',
   has_feedback: false,
 }
+
+// 강사 스페이스 제출 목록
+export const mockTeacherSpaceSubmissions = [
+  {
+    id: 1,
+    studentNickname: '최학생',
+    problemTitle: '두 수의 합',
+    submittedAt: '2026-05-14T18:00:00Z',
+    feedbackStatus: 'PENDING' as const,
+    commentCount: 1,
+  },
+  {
+    id: 2,
+    studentNickname: '정학생',
+    problemTitle: '두 수의 합',
+    submittedAt: '2026-05-06T09:15:00Z',
+    feedbackStatus: 'COMPLETED' as const,
+    commentCount: 1,
+  },
+]
