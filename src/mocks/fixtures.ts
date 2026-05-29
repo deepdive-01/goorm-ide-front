@@ -158,7 +158,7 @@ export const mockWorkspace = {
   description:
     '파이썬의 기초 문법과 변수, 제어문 등 프로그래밍의 핵심 개념을 익히고, 간단한 알고리즘 문제를 풀며 실력을 다지는 클래스입니다.',
   is_public: false,
-  invite_code: 'ABC12345',
+  invite_code: '152436',
   is_active: true,
   mentor: { id: 2, nickname: '엄성현' },
   member_count: 25,

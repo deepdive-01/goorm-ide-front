@@ -322,12 +322,6 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
     )
   }
 
-  const copyInviteCode = () => {
-    if (!workspace?.invite_code || !navigator.clipboard) return
-
-    void navigator.clipboard.writeText(workspace.invite_code)
-  }
-
   return (
     <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
       <div className="mx-auto flex w-full max-w-[1104px] flex-1 flex-col gap-8">
@@ -348,7 +342,10 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
             </header>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={copyInviteCode} {...HEADER_ACTION_BTN}>
+              <Button
+                onClick={() => navigate(`/teacher/spaces/${spaceId}/invite`)}
+                {...HEADER_ACTION_BTN}
+              >
                 <Send className="size-5 shrink-0" aria-hidden />
                 {TEACHER_SPACE_DETAIL_COPY.inviteStudents}
               </Button>
