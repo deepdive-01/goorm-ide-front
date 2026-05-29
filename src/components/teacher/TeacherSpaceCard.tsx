@@ -1,4 +1,5 @@
 import { FileText, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import Card from '@/components/common/Card/Card'
 import { TEACHER_SPACES_COPY } from '@/content/teacherSpaces'
 import type { WorkspaceListItem } from '@/types/workspace.type'
@@ -11,8 +12,13 @@ function TeacherSpaceCard({ workspace }: TeacherSpaceCardProps) {
   const itemCount = workspace.problem_count ?? workspace.lecture_count ?? 0
 
   return (
+    <Link
+      to={`/teacher/spaces/${workspace.id}`}
+      className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-green/60 rounded-xl"
+    >
     <Card
       width="w-full"
+      cursor="pointer"
       className="h-full bg-[#0d0d0d] transition-colors hover:border-neon-green/60"
     >
       <div className="flex min-h-[12.5rem] flex-col justify-between gap-6">
@@ -41,6 +47,7 @@ function TeacherSpaceCard({ workspace }: TeacherSpaceCardProps) {
         </div>
       </div>
     </Card>
+    </Link>
   )
 }
 
