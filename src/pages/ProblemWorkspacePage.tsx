@@ -2,24 +2,22 @@ import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import Spinner from '@/components/common/Spinner/Spinner'
 import Card from '@/components/common/Card/Card'
-import CodeEditorPanel from '@/components/student/problemWorkspace/CodeEditorPanel'
+import Editor from '@/components/Editor/Editor'
 import ProblemCodeCommentsTab from '@/components/student/problemWorkspace/ProblemCodeCommentsTab'
 import ProblemDescriptionTab from '@/components/student/problemWorkspace/ProblemDescriptionTab'
 import ProblemFeedbackTab from '@/components/student/problemWorkspace/ProblemFeedbackTab'
 import ProblemWorkspaceSubHeader from '@/components/student/problemWorkspace/ProblemWorkspaceSubHeader'
 import ProblemWorkspaceTabs from '@/components/student/problemWorkspace/ProblemWorkspaceTabs'
-import SubmittedCodeReview from '@/components/student/problemWorkspace/SubmittedCodeReview'
 import {
   DEFAULT_STUDENT_WORKSPACE_CODE,
   MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS,
   MOCK_PROBLEM_WORKSPACE_FEEDBACK,
-  MOCK_SUBMITTED_CODE_REVIEW,
   STUDENT_PROBLEM_WORKSPACE_COPY,
 } from '@/content/studentProblemWorkspace'
-import { toEditorLanguage } from '@/lib/problemLanguage'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useProblem } from '@/hooks/useProblem'
 import { useWorkspace } from '@/hooks/useWorkspace'
+import { toEditorLanguage } from '@/lib/problemLanguage'
 import type { ProblemDetail } from '@/types/problem.type'
 import type { ProblemWorkspaceTab } from '@/types/studentProblemWorkspace.type'
 import type { WorkspaceDetail } from '@/types/workspace.type'
@@ -132,10 +130,8 @@ function ProblemWorkspaceLoaded({
 }) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<ProblemWorkspaceTab>('description')
-  const [code, setCode] = useState(
-    () => problem.starter_code || DEFAULT_STUDENT_WORKSPACE_CODE,
-  )
 
+  const snippetCode = problem.starter_code || DEFAULT_STUDENT_WORKSPACE_CODE
   const problemsPath = `/student/spaces/${spaceId}/problems`
 
   return (
@@ -169,7 +165,7 @@ function ProblemWorkspaceLoaded({
               {activeTab === 'codeComments' && (
                 <ProblemCodeCommentsTab
                   items={MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS}
-                  code={code}
+                  code={snippetCode}
                   language={toEditorLanguage(problem.language)}
                 />
               )}
@@ -177,12 +173,19 @@ function ProblemWorkspaceLoaded({
           </section>
 
           <section className="flex flex-col gap-4 lg:col-span-7">
-            <CodeEditorPanel
-              language={problem.language}
-              code={code}
-              onChange={setCode}
+            <Editor
+              roomId={spaceId}
+              width="w-full"
+              height="45vh"
+              initialCode={problem.starter_code ?? ''}
+              initialLanguage={toEditorLanguage(problem.language)}
+              testCases={
+                problem.testcases?.map((tc) => ({
+                  input: tc.input,
+                  expectedOutput: tc.expected_output,
+                })) ?? []
+              }
             />
-            <SubmittedCodeReview comments={MOCK_SUBMITTED_CODE_REVIEW} />
           </section>
         </div>
       </main>

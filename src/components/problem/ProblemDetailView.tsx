@@ -15,7 +15,7 @@ type ProblemDetailViewProps = {
 }
 
 function getVisibleTestcases(problem: ProblemDetail) {
-  return [...problem.testcases]
+  return [...(problem.testcases ?? [])]
     .filter((testcase) => !testcase.is_hidden)
     .sort((a, b) => a.order_num - b.order_num)
 }

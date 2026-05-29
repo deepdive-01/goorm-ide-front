@@ -1,4 +1,3 @@
-import type { SubmittedCodeReviewComment } from '@/types/studentProblemWorkspace.type'
 import type {
   StudentCodeCommentItem,
   StudentSubmissionFeedbackItem,
@@ -25,11 +24,6 @@ export const STUDENT_PROBLEM_WORKSPACE_COPY = {
     title: '코드 에디터',
     run: '실행',
     submit: '제출',
-  },
-  review: {
-    title: '제출 코드 리뷰',
-    commentCount: (count: number) => `${count}개의 코멘트`,
-    lineLabel: (line: number) => `줄 ${line}`,
   },
   invalidParams: '문항을 찾을 수 없습니다.',
 } as const
@@ -63,16 +57,6 @@ export const MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS: StudentCodeCommentItem[] = [
     authorName: '김강사',
     lineNumber: 2,
     message: '입력을 한 줄로 파싱하는 방식이 읽기 쉽습니다.',
-  },
-]
-
-export const MOCK_SUBMITTED_CODE_REVIEW: SubmittedCodeReviewComment[] = [
-  {
-    lineNumber: 1,
-    code: 'a, b = map(int, input().split())',
-    authorName: '김강사',
-    message:
-      'map 함수를 사용해 깔끔하게 처리했네요! 한 줄로 입력을 처리하는 방식이 아주 효율적입니다.',
   },
 ]
 

@@ -7,6 +7,7 @@ import type {
   CodeFeedbackEditorProps,
   CodeLineComment,
 } from '@/types/codeFeedback.type'
+import { defineGoormMonacoTheme, GOORM_MONACO_THEME } from '@/lib/monacoGoormTheme'
 import CodeFeedbackCommentMarker from './CodeFeedbackCommentMarker'
 
 const HIGHLIGHT_CLASS = 'code-feedback-line-highlight'
@@ -122,11 +123,13 @@ function CodeFeedbackEditor({
       ref={containerRef}
       className={`relative overflow-visible rounded-lg border border-gray-800 ${className}`}
     >
-      <div className="overflow-hidden rounded-lg">
+      <div className="overflow-hidden rounded-lg bg-[#060606]">
         <MonacoEditor
           height={height}
+          theme={GOORM_MONACO_THEME}
           language={MONACO_LANGUAGE[language]}
           value={code}
+          beforeMount={defineGoormMonacoTheme}
           onMount={handleEditorMount}
           onChange={(value) => onChange?.(value ?? '')}
           options={{
