@@ -38,3 +38,7 @@ body,
 .scrollbar-theme::-webkit-scrollbar-thumb:hover {
   background: var(--color-gray-700);
 }
+
+.code-feedback-line-highlight {
+  background-color: color-mix(in srgb, var(--color-neon-blue) 10%, transparent);
+}

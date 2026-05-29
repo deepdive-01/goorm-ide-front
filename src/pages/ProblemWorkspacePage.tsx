@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import Spinner from '@/components/common/Spinner/Spinner'
 import Card from '@/components/common/Card/Card'
@@ -10,15 +10,19 @@ import ProblemWorkspaceSubHeader from '@/components/student/problemWorkspace/Pro
 import ProblemWorkspaceTabs from '@/components/student/problemWorkspace/ProblemWorkspaceTabs'
 import SubmittedCodeReview from '@/components/student/problemWorkspace/SubmittedCodeReview'
 import {
+  DEFAULT_STUDENT_WORKSPACE_CODE,
   MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS,
   MOCK_PROBLEM_WORKSPACE_FEEDBACK,
   MOCK_SUBMITTED_CODE_REVIEW,
   STUDENT_PROBLEM_WORKSPACE_COPY,
 } from '@/content/studentProblemWorkspace'
+import { toEditorLanguage } from '@/lib/problemLanguage'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useProblem } from '@/hooks/useProblem'
 import { useWorkspace } from '@/hooks/useWorkspace'
+import type { ProblemDetail } from '@/types/problem.type'
 import type { ProblemWorkspaceTab } from '@/types/studentProblemWorkspace.type'
+import type { WorkspaceDetail } from '@/types/workspace.type'
 
 function ProblemWorkspacePage() {
   const { spaceId: spaceIdParam, problemId: problemIdParam } = useParams()
@@ -44,21 +48,11 @@ function ProblemWorkspaceContent({
   spaceId: number
   problemId: number
 }) {
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<ProblemWorkspaceTab>('description')
-  const [code, setCode] = useState('')
-
   const { user, isLoading: isUserLoading } = useCurrentUser()
   const { workspace, isLoading: isWorkspaceLoading } = useWorkspace(spaceId)
   const { problem, isLoading: isProblemLoading } = useProblem(spaceId, problemId)
 
   const isLoading = isUserLoading || isWorkspaceLoading || isProblemLoading
-
-  useEffect(() => {
-    if (problem?.starter_code) {
-      setCode(problem.starter_code)
-    }
-  }, [problem?.starter_code])
 
   const tabs = useMemo(
     () => [
@@ -110,6 +104,38 @@ function ProblemWorkspaceContent({
     )
   }
 
+  return (
+    <ProblemWorkspaceLoaded
+      key={problemId}
+      spaceId={spaceId}
+      problem={problem}
+      workspace={workspace}
+      tabs={tabs}
+    />
+  )
+}
+
+function ProblemWorkspaceLoaded({
+  spaceId,
+  problem,
+  workspace,
+  tabs,
+}: {
+  spaceId: number
+  problem: ProblemDetail
+  workspace: WorkspaceDetail
+  tabs: {
+    id: ProblemWorkspaceTab
+    label: string
+    count?: number
+  }[]
+}) {
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<ProblemWorkspaceTab>('description')
+  const [code, setCode] = useState(
+    () => problem.starter_code || DEFAULT_STUDENT_WORKSPACE_CODE,
+  )
+
   const problemsPath = `/student/spaces/${spaceId}/problems`
 
   return (
@@ -143,6 +169,8 @@ function ProblemWorkspaceContent({
               {activeTab === 'codeComments' && (
                 <ProblemCodeCommentsTab
                   items={MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS}
+                  code={code}
+                  language={toEditorLanguage(problem.language)}
                 />
               )}
             </Card>
