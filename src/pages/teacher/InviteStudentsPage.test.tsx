@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useWorkspace } from '@/hooks/useWorkspace'
+import { inviteByEmail } from '@/services/workspace'
 import { renderWithRouter } from '@/tests/utils'
 import InviteStudentsPage from './InviteStudentsPage'
 
@@ -12,6 +13,10 @@ vi.mock('@/hooks/useCurrentUser', () => ({
 
 vi.mock('@/hooks/useWorkspace', () => ({
   useWorkspace: vi.fn(),
+}))
+
+vi.mock('@/services/workspace', () => ({
+  inviteByEmail: vi.fn(),
 }))
 
 describe('InviteStudentsPage', () => {
@@ -28,6 +33,10 @@ describe('InviteStudentsPage', () => {
       },
       isLoading: false,
     })
+
+    vi.mocked(inviteByEmail).mockResolvedValue({
+      data: { data: { sent_count: 1 } },
+    } as Awaited<ReturnType<typeof inviteByEmail>>)
 
     vi.mocked(useWorkspace).mockReturnValue({
       workspace: {
