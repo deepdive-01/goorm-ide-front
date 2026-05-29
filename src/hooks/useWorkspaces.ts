@@ -1,32 +1,26 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { getWorkspaces } from '@/services/workspace'
+import { workspaceQueryKeys } from '@/lib/workspaceQueryKeys'
 import type { WorkspaceListItem } from '@/types/workspace.type'
 
 interface UseWorkspacesResult {
   workspaces: WorkspaceListItem[]
   isLoading: boolean
-  refetch: () => Promise<void>
+  refetch: () => Promise<unknown>
 }
 
 export function useWorkspaces(): UseWorkspacesResult {
-  const [workspaces, setWorkspaces] = useState<WorkspaceListItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  const refetch = useCallback(async () => {
-    setIsLoading(true)
-    try {
+  const query = useQuery({
+    queryKey: workspaceQueryKeys.all,
+    queryFn: async () => {
       const { data } = await getWorkspaces()
-      setWorkspaces(data.data)
-    } catch {
-      setWorkspaces([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+      return data.data
+    },
+  })
 
-  useEffect(() => {
-    void refetch()
-  }, [refetch])
-
-  return { workspaces, isLoading, refetch }
+  return {
+    workspaces: query.data ?? [],
+    isLoading: query.isLoading,
+    refetch: query.refetch,
+  }
 }

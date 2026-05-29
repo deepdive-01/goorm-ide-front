@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { Key, X } from 'lucide-react'
 import Button from '@/components/common/Button/Button'
-import { joinWorkspace } from '@/services/workspace'
+import { useJoinWorkspace } from '@/hooks/useJoinWorkspace'
 import { STUDENT_SPACES_COPY } from '@/content/studentSpaces'
 
 const INPUT_CLASS =
@@ -23,16 +23,12 @@ const JOIN_CODE_BTN = {
   hoverClassName: 'hover:bg-neon-green/10',
 }
 
-type JoinSpaceDialogProps = {
-  onJoined: () => void
-}
-
-function JoinSpaceDialog({ onJoined }: JoinSpaceDialogProps) {
+function JoinSpaceDialog() {
   const [open, setOpen] = useState(false)
   const [inviteCode, setInviteCode] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const titleId = useId()
+  const joinWorkspace = useJoinWorkspace()
 
   useEffect(() => {
     if (!open) return
@@ -48,18 +44,14 @@ function JoinSpaceDialog({ onJoined }: JoinSpaceDialogProps) {
     const code = inviteCode.trim()
     if (!code) return
 
-    setIsLoading(true)
     setError(null)
 
     try {
-      await joinWorkspace({ invite_code: code })
+      await joinWorkspace.mutateAsync(code)
       setInviteCode('')
       setOpen(false)
-      onJoined()
     } catch {
       setError(STUDENT_SPACES_COPY.joinError)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -134,7 +126,7 @@ function JoinSpaceDialog({ onJoined }: JoinSpaceDialogProps) {
                 </Button>
                 <Button
                   type="submit"
-                  isLoading={isLoading}
+                  isLoading={joinWorkspace.isPending}
                   disabled={!inviteCode.trim()}
                   ariaLabel={STUDENT_SPACES_COPY.joinSubmit}
                   {...SUBMIT_BTN}

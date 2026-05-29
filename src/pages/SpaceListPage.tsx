@@ -15,7 +15,7 @@ type SpaceListPageProps = {
 function SpaceListPage({ role }: SpaceListPageProps) {
   const params = useParams()
   const { user, isLoading: isUserLoading } = useCurrentUser()
-  const { workspaces, isLoading, refetch } = useWorkspaces()
+  const { workspaces, isLoading } = useWorkspaces()
   const [query, setQuery] = useState('')
 
   const teacherId = params.teacherId
@@ -62,7 +62,7 @@ function SpaceListPage({ role }: SpaceListPageProps) {
               {STUDENT_SPACES_COPY.subtitle}
             </p>
           </header>
-          <JoinSpaceDialog onJoined={refetch} />
+          <JoinSpaceDialog />
         </div>
 
         <div className="relative">
