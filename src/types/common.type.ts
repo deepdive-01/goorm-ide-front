@@ -16,6 +16,7 @@ export interface ButtonProps {
   hoverClassName?: string
   size?: ButtonSize
   type?: 'button' | 'submit'
+  form?: string
   className?: string
   isLoading?: boolean
   disabled?: boolean

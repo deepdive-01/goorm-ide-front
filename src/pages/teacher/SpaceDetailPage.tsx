@@ -352,7 +352,10 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
                 <Send className="size-5 shrink-0" aria-hidden />
                 {TEACHER_SPACE_DETAIL_COPY.inviteStudents}
               </Button>
-              <Button {...HEADER_ACTION_BTN}>
+              <Button
+                onClick={() => navigate(`/teacher/spaces/${spaceId}/problems-create`)}
+                {...HEADER_ACTION_BTN}
+              >
                 <Plus className="size-5 shrink-0" aria-hidden />
                 {TEACHER_SPACE_DETAIL_COPY.createProblem}
               </Button>
