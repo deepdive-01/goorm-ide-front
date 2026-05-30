@@ -114,4 +114,24 @@ describe('SpaceDetailPage', () => {
     expect(screen.getAllByText('댓글 1')).toHaveLength(2)
     expect(screen.queryByText('피보나치 수열')).not.toBeInTheDocument()
   })
+
+  test('제출 카드를 클릭하면 제출 리뷰 화면으로 이동한다', async () => {
+    const user = userEvent.setup()
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/teacher/spaces/:spaceId" element={<SpaceDetailPage />} />
+        <Route
+          path="/teacher/spaces/:spaceId/submissions/:submissionId"
+          element={<div>submission review</div>}
+        />
+      </Routes>,
+      { route: '/teacher/spaces/1' },
+    )
+
+    await user.click(screen.getByRole('tab', { name: '제출 현황' }))
+    await user.click(screen.getByRole('heading', { name: '최학생' }))
+
+    expect(screen.getByText('submission review')).toBeInTheDocument()
+  })
 })
