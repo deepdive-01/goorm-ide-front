@@ -3,13 +3,17 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Logo from '@/components/common/Logo'
 import Button from '@/components/common/Button/Button'
 import {
+  clearAccessToken,
+  clearOAuthIntendedRole,
   getAdditionalInfoErrorMessage,
   getRoleHomePath,
+  resolveOAuthRole,
   saveAccessToken,
   validateEmail,
   validateRequired,
 } from '@/lib/auth'
 import { oauthSignup } from '@/services/auth'
+import { getMe } from '@/services/user'
 import type { UserRole } from '@/types/api.type'
 
 const ROLE_LABEL: Record<UserRole, string> = {
@@ -41,7 +45,7 @@ function AdditionalInfoPage() {
   const roleFromQuery = searchParams.get('role')
 
   const [role, setRole] = useState<UserRole>(
-    roleFromQuery === 'MENTOR' ? 'MENTOR' : 'STUDENT',
+    () => resolveOAuthRole(roleFromQuery) ?? 'STUDENT',
   )
   const [name, setName] = useState(searchParams.get('name') ?? '')
   const [nickname, setNickname] = useState(searchParams.get('nickname') ?? '')
@@ -91,7 +95,17 @@ function AdditionalInfoPage() {
         role,
       })
       saveAccessToken(data.data.access_token)
-      navigate(getRoleHomePath(role))
+
+      const { data: meResponse } = await getMe()
+      if (meResponse.data.role !== role) {
+        clearAccessToken()
+        clearOAuthIntendedRole()
+        setError('선택한 사용자 유형이 올바르지 않습니다')
+        return
+      }
+
+      clearOAuthIntendedRole()
+      navigate(getRoleHomePath(meResponse.data.role))
     } catch (submitError) {
       setError(getAdditionalInfoErrorMessage(submitError))
     } finally {
