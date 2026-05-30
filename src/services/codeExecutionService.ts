@@ -11,7 +11,11 @@ interface ExecuteParams {
 export async function executeCode(params: ExecuteParams): Promise<ExecutionResult> {
   const response = await api.post<ApiResponse<ExecutionResult>>(
     '/api/v1/code/execute',
-    params,
+    {
+      room_id: params.roomId,
+      language: params.language,
+      code: params.code,
+    },
   )
   return response.data.data
 }
