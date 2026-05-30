@@ -39,7 +39,8 @@ export function toEditorLineComments(
   return comments.map((comment) => ({
     id: comment.id,
     lineNumber: comment.startLine,
-    endLineNumber: comment.endLine,
+    endLineNumber:
+      comment.endLine !== comment.startLine ? comment.endLine : undefined,
     labelLineNumber: comment.startLine,
     message: comment.message,
   }))

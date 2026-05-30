@@ -8,7 +8,7 @@ export interface CodeLineComment {
   endLineNumber?: number
   message: string
   authorName?: string
-  /** 팝오버·라벨에 표시할 원본 줄 번호 (미설정 시 lineNumber) */
+  /** 팝오버·라벨에 표시할 원본 시작 줄 (미설정 시 lineNumber, 끝 줄은 endLineNumber 오프셋으로 계산) */
   labelLineNumber?: number
 }
 

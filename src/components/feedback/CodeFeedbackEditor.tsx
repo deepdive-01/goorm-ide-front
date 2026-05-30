@@ -204,6 +204,7 @@ function CodeFeedbackEditor({
           <CodeFeedbackCommentMarker
             key={comment.id}
             lineNumber={comment.lineNumber}
+            endLineNumber={comment.endLineNumber}
             labelLineNumber={comment.labelLineNumber}
             message={comment.message}
             top={top}

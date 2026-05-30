@@ -2,10 +2,12 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MessageSquareCode } from 'lucide-react'
 import { CODE_FEEDBACK_COPY } from '@/content/codeFeedback'
+import { getCommentLabelLineRange } from '@/lib/codeFeedbackComment'
 import CodeFeedbackPopover from './CodeFeedbackPopover'
 
 type CodeFeedbackCommentMarkerProps = {
   lineNumber: number
+  endLineNumber?: number
   labelLineNumber?: number
   message: string
   top: number
@@ -21,12 +23,17 @@ const POPOVER_GAP = 8
 
 function CodeFeedbackCommentMarker({
   lineNumber,
+  endLineNumber,
   labelLineNumber,
   message,
   top,
   lineHeight,
 }: CodeFeedbackCommentMarkerProps) {
-  const displayLineNumber = labelLineNumber ?? lineNumber
+  const { start: displayStartLine, end: displayEndLine } = getCommentLabelLineRange({
+    lineNumber,
+    endLineNumber,
+    labelLineNumber,
+  })
   const anchorRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [popoverPosition, setPopoverPosition] = useState<PopoverPosition | null>(null)
@@ -75,7 +82,11 @@ function CodeFeedbackCommentMarker({
         onMouseEnter={handleOpen}
         onMouseLeave={handleClose}
       >
-        <CodeFeedbackPopover lineNumber={displayLineNumber} message={message} />
+        <CodeFeedbackPopover
+          startLine={displayStartLine}
+          endLine={displayEndLine}
+          message={message}
+        />
       </div>,
       document.body,
     )
@@ -96,7 +107,10 @@ function CodeFeedbackCommentMarker({
 
         <button
           type="button"
-          aria-label={CODE_FEEDBACK_COPY.commentIconLabel(displayLineNumber)}
+          aria-label={CODE_FEEDBACK_COPY.commentIconLabel(
+            displayStartLine,
+            displayEndLine,
+          )}
           aria-expanded={isOpen}
           className="pointer-events-auto flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-neon-blue text-black shadow-sm transition-transform hover:scale-105"
         >
