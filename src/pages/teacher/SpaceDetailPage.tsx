@@ -9,9 +9,9 @@ import Spinner from '@/components/common/Spinner/Spinner'
 import { TEACHER_SPACE_DETAIL_COPY } from '@/content/teacherSpaceDetail'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useProblems } from '@/hooks/useProblems'
+import { useSpaceSubmissions } from '@/hooks/useSpaceSubmissions'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { getRoleSpacesPath } from '@/lib/authRoutes'
-import { mockTeacherSpaceSubmissions } from '@/mocks/fixtures'
 import type { StudentProblemListItem } from '@/types/studentProblem.type'
 import type { TeacherSpaceSubmissionListItem } from '@/types/teacherSpaceSubmission.type'
 
@@ -201,7 +201,9 @@ function SubmissionStatusRow({
                 {submission.problemTitle}
               </span>
               <span className="text-body3 text-[#b7b7b7]">
-                {formatSubmittedAt(submission.submittedAt)}
+                {submission.submittedAt
+                  ? formatSubmittedAt(submission.submittedAt)
+                  : TEACHER_SPACE_DETAIL_COPY.submissionTimeUnknown}
               </span>
             </div>
           </div>
@@ -292,18 +294,24 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<SpaceDetailTab>('problems')
   const { user, isLoading: isUserLoading } = useCurrentUser()
-  const { workspace, isLoading: isWorkspaceLoading } = useWorkspace(spaceId)
+  const { workspace, isLoading: isWorkspaceLoading, error: workspaceError } =
+    useWorkspace(spaceId)
   const { problems, isLoading: isProblemsLoading } = useProblems(spaceId)
+  const {
+    submissions: spaceSubmissions,
+    isLoading: isSubmissionsLoading,
+    error: submissionsError,
+  } = useSpaceSubmissions(spaceId, problems, isProblemsLoading)
 
   const teacherProblems = problems as StudentProblemListItem[]
-  const spaceSubmissions = mockTeacherSpaceSubmissions
   const pendingCount = spaceSubmissions.filter(
     (submission) => submission.feedbackStatus === 'PENDING',
   ).length
   const feedbackCompleteCount = spaceSubmissions.filter(
     (submission) => submission.feedbackStatus === 'COMPLETED',
   ).length
-  const isLoading = isUserLoading || isWorkspaceLoading || isProblemsLoading
+  const isProblemsTabLoading = isWorkspaceLoading || isProblemsLoading
+  const isSubmissionsTabLoading = isWorkspaceLoading || isProblemsLoading || isSubmissionsLoading
 
   if (isUserLoading) {
     return (
@@ -321,12 +329,12 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
     return <Navigate to={getRoleSpacesPath(user)} replace />
   }
 
-  if (!isLoading && !workspace) {
+  if (!isWorkspaceLoading && !workspace) {
     return (
       <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
         <div className="mx-auto w-full max-w-[1104px]">
-          <p className="text-body1 text-center text-gray-400">
-            {TEACHER_SPACE_DETAIL_COPY.invalidSpace}
+          <p className="text-body1 text-center text-gray-400" role="alert">
+            {workspaceError ?? TEACHER_SPACE_DETAIL_COPY.invalidSpace}
           </p>
         </div>
       </main>
@@ -403,7 +411,7 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
 
           {activeTab === 'problems' ? (
             <div id="problem-list" className="flex flex-col gap-4">
-              {isLoading ? (
+              {isProblemsTabLoading ? (
                 <div className="flex min-h-[240px] items-center justify-center">
                   <Spinner size="md" color="text-neon-green" />
                 </div>
@@ -422,7 +430,17 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
             </div>
           ) : (
             <div id="submission-list" className="flex flex-col gap-4">
-              {spaceSubmissions.length === 0 ? (
+              {isSubmissionsTabLoading ? (
+                <div className="flex min-h-[240px] items-center justify-center">
+                  <Spinner size="md" color="text-neon-green" />
+                </div>
+              ) : submissionsError ? (
+                <div className="flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-800 px-4 text-center">
+                  <p className="text-body2 text-red-400" role="alert">
+                    {submissionsError}
+                  </p>
+                </div>
+              ) : spaceSubmissions.length === 0 ? (
                 <div className="flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-800 px-4 text-center">
                   <p className="text-head3 text-white">
                     {TEACHER_SPACE_DETAIL_COPY.emptySubmissionsTitle}

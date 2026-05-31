@@ -1,4 +1,5 @@
-export type SubmissionStatus = 'SUBMITTED' | 'PASSED' | 'FAILED'
+/** Swagger SubmissionItem.status */
+export type SubmissionStatus = 'PENDING' | 'SUCCESS' | 'FAIL' | 'ERROR'
 
 export interface SubmissionListParams {
   status?: SubmissionStatus
@@ -9,8 +10,8 @@ export interface SubmissionItem {
   student_id: number
   nickname: string
   status: SubmissionStatus
-  submitted_at: string
   has_feedback: boolean
+  submitted_at?: string
 }
 
 export interface SubmissionList {

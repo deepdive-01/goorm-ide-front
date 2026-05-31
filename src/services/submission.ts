@@ -1,15 +1,22 @@
+import { normalizeSubmissionList } from '@/lib/submissionMapper'
 import api from './api'
 import type { ApiResponse } from '@/types/api.type'
-import type {
-  SubmissionListParams,
-  SubmissionList,
-} from '@/types/submission.type'
+import type { SubmissionListParams } from '@/types/submission.type'
 
-export const getSubmissions = (
-  questionsId: number,
+export const getSubmissions = async (
+  problemId: number,
   params?: SubmissionListParams,
-) =>
-  api.get<ApiResponse<SubmissionList>>(
-    `/api/v1/questions/${questionsId}/submissions`,
+) => {
+  const response = await api.get<ApiResponse<unknown>>(
+    `/api/v1/questions/${problemId}/submissions`,
     { params },
   )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeSubmissionList(response.data.data),
+    },
+  }
+}
