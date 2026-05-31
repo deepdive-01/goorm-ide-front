@@ -20,4 +20,21 @@ describe('CodeFeedbackCommentMarker', () => {
     expect(await screen.findByText('줄 1')).toBeInTheDocument()
     expect(screen.getByText('map 함수를 사용해 깔끔하게 처리했네요!')).toBeInTheDocument()
   })
+
+  test('여러 줄 코멘트 hover 시 범위 라벨을 표시한다', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <CodeFeedbackCommentMarker
+        lineNumber={1}
+        endLineNumber={3}
+        message="1-3"
+        top={32}
+        lineHeight={25}
+      />,
+    )
+
+    await user.hover(screen.getByRole('button', { name: '줄 1-3 피드백 보기' }))
+    expect(await screen.findByText('줄 1-3')).toBeInTheDocument()
+  })
 })

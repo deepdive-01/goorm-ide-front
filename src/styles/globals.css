@@ -42,3 +42,7 @@ body,
 .code-feedback-line-highlight {
   background-color: color-mix(in srgb, var(--color-neon-blue) 10%, transparent);
 }
+
+.code-feedback-line-selection {
+  background-color: color-mix(in srgb, var(--color-neon-green) 10%, transparent);
+}

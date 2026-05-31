@@ -1,6 +1,10 @@
 export const CODE_FEEDBACK_COPY = {
-  lineLabel: (lineNumber: number) => `줄 ${lineNumber}`,
-  commentIconLabel: (lineNumber: number) => `줄 ${lineNumber} 피드백 보기`,
+  lineLabel: (startLine: number, endLine?: number) =>
+    endLine !== undefined && endLine !== startLine
+      ? `줄 ${startLine}-${endLine}`
+      : `줄 ${startLine}`,
+  commentIconLabel: (startLine: number, endLine?: number) =>
+    `${CODE_FEEDBACK_COPY.lineLabel(startLine, endLine)} 피드백 보기`,
   emptyCodeComments: '코드 코멘트가 없습니다.',
   emptySubmissionFeedback: '아직 받은 피드백이 없습니다.',
 } as const

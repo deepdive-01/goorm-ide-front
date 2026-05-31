@@ -11,6 +11,7 @@ import { defineGoormMonacoTheme, GOORM_MONACO_THEME } from '@/lib/monacoGoormThe
 import CodeFeedbackCommentMarker from './CodeFeedbackCommentMarker'
 
 const HIGHLIGHT_CLASS = 'code-feedback-line-highlight'
+const SELECTION_HIGHLIGHT_CLASS = 'code-feedback-line-selection'
 
 const MONACO_LANGUAGE: Record<Language, string> = {
   python: 'python',
@@ -34,6 +35,8 @@ function CodeFeedbackEditor({
   onChange,
   className = '',
   baseLineNumber,
+  selectedLineRange = null,
+  onLineNumberClick,
 }: CodeFeedbackEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
@@ -43,20 +46,41 @@ function CodeFeedbackEditor({
 
   const applyLineHighlights = useCallback(
     (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
-      const decorations = comments.map((comment) => ({
-        range: new monaco.Range(comment.lineNumber, 1, comment.lineNumber, 1),
-        options: {
-          isWholeLine: true,
-          className: HIGHLIGHT_CLASS,
-        },
-      }))
+      const commentDecorations = comments.map((comment) => {
+        const endLine = comment.endLineNumber ?? comment.lineNumber
+
+        return {
+          range: new monaco.Range(comment.lineNumber, 1, endLine, 1),
+          options: {
+            isWholeLine: true,
+            className: HIGHLIGHT_CLASS,
+          },
+        }
+      })
+
+      const selectionDecorations = selectedLineRange
+        ? [
+            {
+              range: new monaco.Range(
+                selectedLineRange.startLine,
+                1,
+                selectedLineRange.endLine,
+                1,
+              ),
+              options: {
+                isWholeLine: true,
+                className: SELECTION_HIGHLIGHT_CLASS,
+              },
+            },
+          ]
+        : []
 
       decorationIdsRef.current = editor.deltaDecorations(
         decorationIdsRef.current,
-        decorations,
+        [...commentDecorations, ...selectionDecorations],
       )
     },
-    [comments],
+    [comments, selectedLineRange],
   )
 
   const updateMarkerLayouts = useCallback(() => {
@@ -93,8 +117,23 @@ function CodeFeedbackEditor({
 
       editor.onDidScrollChange(updateMarkerLayouts)
       editor.onDidLayoutChange(updateMarkerLayouts)
+
+      if (onLineNumberClick) {
+        editor.onMouseDown((event) => {
+          if (
+            event.target.type !== monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS ||
+            !event.target.position
+          ) {
+            return
+          }
+
+          event.event.preventDefault()
+          event.event.stopPropagation()
+          onLineNumberClick(event.target.position.lineNumber, event.event.shiftKey)
+        })
+      }
     },
-    [applyLineHighlights, updateMarkerLayouts],
+    [applyLineHighlights, onLineNumberClick, updateMarkerLayouts],
   )
 
   useEffect(() => {
@@ -165,6 +204,7 @@ function CodeFeedbackEditor({
           <CodeFeedbackCommentMarker
             key={comment.id}
             lineNumber={comment.lineNumber}
+            endLineNumber={comment.endLineNumber}
             labelLineNumber={comment.labelLineNumber}
             message={comment.message}
             top={top}

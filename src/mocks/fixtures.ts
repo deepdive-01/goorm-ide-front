@@ -1,4 +1,6 @@
+import { MOCK_TEACHER_SUBMITTED_CODE } from '@/content/teacherSubmissionReview'
 import type { UserRole } from '@/types/api.type'
+import type { TeacherSubmissionReviewDetail } from '@/types/teacherSubmissionReview.type'
 import type { UserInfo } from '@/types/user.type'
 import type { WorkspaceListItem } from '@/types/workspace.type'
 
@@ -520,6 +522,35 @@ export const mockSubmission = {
   status: 'SUBMITTED' as const,
   submitted_at: '2025-05-11T13:00:00Z',
   has_feedback: false,
+}
+
+// 강사 제출 리뷰 상세 (API 연동 전 목 데이터)
+export const mockTeacherSubmissionReviews: Record<number, TeacherSubmissionReviewDetail> = {
+  1: {
+    submissionId: 1,
+    problemId: 1,
+    studentNickname: '최학생',
+    submittedAt: '2026-05-14T18:00:00Z',
+    code: MOCK_TEACHER_SUBMITTED_CODE,
+    lineComments: [
+      {
+        id: 'teacher-comment-1',
+        startLine: 2,
+        endLine: 2,
+        message: 'map 함수를 사용해 깔끔하게 처리했네요!',
+      },
+    ],
+    overallFeedback: '',
+  },
+  2: {
+    submissionId: 2,
+    problemId: 1,
+    studentNickname: '정학생',
+    submittedAt: '2026-05-06T09:15:00Z',
+    code: MOCK_TEACHER_SUBMITTED_CODE,
+    lineComments: [],
+    overallFeedback: '전반적으로 잘 작성했습니다. 변수명을 조금 더 명확하게 하면 좋겠어요.',
+  },
 }
 
 // 강사 스페이스 제출 목록

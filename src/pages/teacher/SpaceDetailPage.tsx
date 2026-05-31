@@ -152,14 +152,25 @@ function ProblemManagementRow({ index, problem }: ProblemManagementRowProps) {
   )
 }
 
-function SubmissionStatusRow({ submission }: { submission: TeacherSpaceSubmissionListItem }) {
+function SubmissionStatusRow({
+  spaceId,
+  submission,
+}: {
+  spaceId: number
+  submission: TeacherSpaceSubmissionListItem
+}) {
+  const navigate = useNavigate()
   const isPending = submission.feedbackStatus === 'PENDING'
   const initial = getNicknameInitial(submission.studentNickname)
+
+  const reviewPath = `/teacher/spaces/${spaceId}/submissions/${submission.id}`
 
   return (
     <Card
       width="w-full"
-      className={`px-5 py-6 sm:px-7 ${
+      cursor="pointer"
+      onClick={() => navigate(reviewPath)}
+      className={`px-5 py-6 transition-colors sm:px-7 hover:border-neon-green ${
         isPending
           ? 'border-neon-green bg-neon-green/20'
           : 'bg-[#0d0d0d] border-gray-800'
@@ -422,7 +433,11 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
                 </div>
               ) : (
                 spaceSubmissions.map((submission) => (
-                  <SubmissionStatusRow key={submission.id} submission={submission} />
+                  <SubmissionStatusRow
+                    key={submission.id}
+                    spaceId={spaceId}
+                    submission={submission}
+                  />
                 ))
               )}
             </div>
