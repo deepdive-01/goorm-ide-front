@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Logo from '@/components/common/Logo'
 import Button from '@/components/common/Button/Button'
 import {
+  clearAccessToken,
   getEmailSendErrorMessage,
   getEmailVerifyErrorMessage,
   getRoleHomePath,
@@ -10,11 +11,12 @@ import {
   saveAccessToken,
   startSocialAuth,
   validateEmail,
-  validatePassword,
   validateRequired,
+  validateSignupPassword,
   validateVerificationCode,
 } from '@/lib/auth'
 import { login, sendEmailCode, signup, verifyEmailCode } from '@/services/auth'
+import { getMe } from '@/services/user'
 import type { UserRole } from '@/types/api.type'
 import type { OAuthProvider } from '@/types/auth.type'
 
@@ -148,7 +150,7 @@ function SignupPage() {
       return
     }
 
-    const passwordError = validatePassword(password)
+    const passwordError = validateSignupPassword(password)
     if (passwordError) {
       setError(passwordError)
       return
@@ -183,8 +185,17 @@ function SignupPage() {
       })
 
       saveAccessToken(data.data.access_token)
-      navigate(getRoleHomePath(role))
+
+      const { data: meResponse } = await getMe()
+      if (meResponse.data.role !== role) {
+        clearAccessToken()
+        setError('선택한 사용자 유형이 올바르지 않습니다')
+        return
+      }
+
+      navigate(getRoleHomePath(meResponse.data.role))
     } catch (submitError) {
+      clearAccessToken()
       setError(getSignupErrorMessage(submitError))
     } finally {
       setIsSubmitting(false)

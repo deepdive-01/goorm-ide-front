@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Logo from '@/components/common/Logo'
 import Button from '@/components/common/Button/Button'
 import {
+  clearAccessToken,
   getLoginErrorMessage,
   getRoleHomePath,
   saveAccessToken,
@@ -11,6 +12,7 @@ import {
   validatePassword,
 } from '@/lib/auth'
 import { login } from '@/services/auth'
+import { getMe } from '@/services/user'
 import type { UserRole } from '@/types/api.type'
 import type { OAuthProvider } from '@/types/auth.type'
 
@@ -86,8 +88,19 @@ function LoginPage() {
         role,
       })
       saveAccessToken(data.data.access_token)
-      navigate(getRoleHomePath(role))
+
+      const { data: meResponse } = await getMe()
+      const userRole = meResponse.data.role
+
+      if (userRole !== role) {
+        clearAccessToken()
+        setError('선택한 사용자 유형이 올바르지 않습니다')
+        return
+      }
+
+      navigate(getRoleHomePath(userRole))
     } catch (submitError) {
+      clearAccessToken()
       setError(getLoginErrorMessage(submitError))
     } finally {
       setIsLoading(false)
