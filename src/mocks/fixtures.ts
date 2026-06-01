@@ -1,5 +1,10 @@
 import { MOCK_TEACHER_SUBMITTED_CODE } from '@/content/teacherSubmissionReview'
-import type { UserRole } from '@/types/api.type'
+import type { Difficulty, Language, UserRole } from '@/types/api.type'
+import type {
+  CreateProblemRequest,
+  ProblemCreated,
+  ProblemDetail,
+} from '@/types/problem.type'
 import type { TeacherSubmissionReviewDetail } from '@/types/teacherSubmissionReview.type'
 import type { UserInfo } from '@/types/user.type'
 import type { WorkspaceListItem } from '@/types/workspace.type'
@@ -384,47 +389,227 @@ export const mockProblemBinarySearch = {
   updated_at: '2025-05-13T09:00:00Z',
 }
 
-export const mockProblemsById = {
+type MockProblemDetail = ProblemDetail
+
+/**
+ * MSW·목 UI 전용 확장 필드.
+ * Swagger `ProblemResponse`(GET /api/v1/files/problems/space/{spaceId})에는 없음.
+ * 제출 상태·테스트케이스 수는 별도 API( submissions, testcases )로 조회해야 함.
+ */
+type MockProblemListItem = {
+  id: number
+  title: string
+  difficulty: Difficulty
+  language: Language
+  is_published: boolean
+  created_at: string
+  submission_status: 'COMPLETED' | 'SUBMITTED' | 'NOT_SUBMITTED'
+  testcase_count: number
+}
+
+const INITIAL_MOCK_PROBLEMS_BY_ID: Record<number, MockProblemDetail> = {
   1: mockProblemSum,
   2: mockProblemFibonacci,
   3: mockProblemBinarySearch,
-} as const
+}
 
-export const mockProblem = mockProblemSum
-
-/** MSW·목 UI — submission_status, testcase_count는 API 스펙 확정 전 목 데이터 */
-export const mockProblemList = [
+const INITIAL_MOCK_PROBLEM_LIST: MockProblemListItem[] = [
   {
     id: 1,
     title: '두 수의 합',
-    difficulty: 'EASY' as const,
-    language: 'PYTHON' as const,
+    difficulty: 'EASY',
+    language: 'PYTHON',
     is_published: true,
     created_at: '2025-05-11T13:00:00Z',
-    submission_status: 'COMPLETED' as const,
+    submission_status: 'COMPLETED',
     testcase_count: 3,
   },
   {
     id: 2,
     title: '피보나치 수열',
-    difficulty: 'MEDIUM' as const,
-    language: 'PYTHON' as const,
+    difficulty: 'MEDIUM',
+    language: 'PYTHON',
     is_published: true,
     created_at: '2025-05-12T10:00:00Z',
-    submission_status: 'SUBMITTED' as const,
+    submission_status: 'SUBMITTED',
     testcase_count: 4,
   },
   {
     id: 3,
     title: '이진 탐색 구현',
-    difficulty: 'MEDIUM' as const,
-    language: 'PYTHON' as const,
+    difficulty: 'MEDIUM',
+    language: 'PYTHON',
     is_published: true,
     created_at: '2025-05-13T09:00:00Z',
-    submission_status: 'NOT_SUBMITTED' as const,
+    submission_status: 'NOT_SUBMITTED',
     testcase_count: 5,
   },
 ]
+
+export let mockProblemsById: Record<number, MockProblemDetail> = {}
+export let mockProblemList: MockProblemListItem[] = []
+
+let nextMockProblemId = 1
+
+function cloneMockProblemDetail(problem: MockProblemDetail): MockProblemDetail {
+  return {
+    ...problem,
+    testcases: problem.testcases.map((testcase) => ({ ...testcase })),
+  }
+}
+
+function cloneMockProblemListItem(item: MockProblemListItem): MockProblemListItem {
+  return { ...item }
+}
+
+export function resetMockProblemState(): void {
+  mockProblemsById = Object.fromEntries(
+    Object.entries(INITIAL_MOCK_PROBLEMS_BY_ID).map(([id, problem]) => [
+      Number(id),
+      cloneMockProblemDetail(problem),
+    ]),
+  )
+  mockProblemList = INITIAL_MOCK_PROBLEM_LIST.map(cloneMockProblemListItem)
+  nextMockProblemId =
+    Object.keys(INITIAL_MOCK_PROBLEMS_BY_ID).reduce((maxId, id) => {
+      return Math.max(maxId, Number(id))
+    }, 0) + 1
+}
+
+export function createMockProblem(
+  params: CreateProblemRequest & { spaceId: number; createdBy?: number },
+): ProblemCreated {
+  const id = nextMockProblemId
+  const now = new Date().toISOString()
+  const createdBy = params.createdBy ?? mockWorkspace.mentor.id
+
+  nextMockProblemId += 1
+
+  const detail: MockProblemDetail = {
+    id,
+    space_id: params.spaceId,
+    created_by: createdBy,
+    problem_bank_id: params.problem_bank_id ?? null,
+    title: params.title,
+    description: params.description,
+    difficulty: params.difficulty,
+    language: params.language,
+    starter_code: params.starter_code ?? '',
+    is_published: false,
+    testcases: params.testcases.map((testcase, index) => ({
+      id: index + 1,
+      input: testcase.input,
+      expected_output: testcase.expected_output,
+      is_hidden: testcase.is_hidden,
+      order_num: testcase.order_num,
+    })),
+    created_at: now,
+    updated_at: now,
+  }
+
+  const listItem: MockProblemListItem = {
+    id,
+    title: params.title,
+    difficulty: params.difficulty,
+    language: params.language,
+    is_published: false,
+    created_at: now,
+    submission_status: 'NOT_SUBMITTED',
+    testcase_count: params.testcases.length,
+  }
+
+  mockProblemsById[id] = detail
+  mockProblemList = [listItem, ...mockProblemList]
+
+  return {
+    id,
+    space_id: params.spaceId,
+    created_by: createdBy,
+    problem_bank_id: params.problem_bank_id ?? null,
+    title: params.title,
+    difficulty: params.difficulty,
+    language: params.language,
+    is_published: false,
+    created_at: now,
+  }
+}
+
+type MockTestcaseCreatePayload = {
+  input_case?: string
+  inputCase?: string
+  output_case?: string
+  outputCase?: string
+  is_example?: boolean
+  isExample?: boolean
+}
+
+function mapMockTestcasePayloads(
+  testcases: MockTestcaseCreatePayload[],
+): MockProblemDetail['testcases'] {
+  return testcases.map((testcase, index) => ({
+    id: index + 1,
+    input: testcase.input_case ?? testcase.inputCase ?? '',
+    expected_output: testcase.output_case ?? testcase.outputCase ?? '',
+    is_hidden: !(testcase.is_example ?? testcase.isExample ?? false),
+    order_num: index,
+  }))
+}
+
+export function replaceMockProblemTestcases(
+  problemId: number,
+  testcases: MockTestcaseCreatePayload[],
+): void {
+  const problem = mockProblemsById[problemId]
+  if (!problem) {
+    return
+  }
+
+  problem.testcases = mapMockTestcasePayloads(testcases)
+
+  const listItem = mockProblemList.find((item) => item.id === problemId)
+  if (listItem) {
+    listItem.testcase_count = problem.testcases.length
+  }
+}
+
+export function updateMockProblem(
+  problemId: number,
+  params: {
+    title: string
+    description: string
+    difficulty: Difficulty
+    language: Language
+    starter_code?: string
+    is_published?: boolean
+  },
+): void {
+  const problem = mockProblemsById[problemId]
+  if (!problem) {
+    return
+  }
+
+  const now = new Date().toISOString()
+
+  problem.title = params.title
+  problem.description = params.description
+  problem.difficulty = params.difficulty
+  problem.language = params.language
+  problem.starter_code = params.starter_code ?? problem.starter_code
+  problem.is_published = params.is_published ?? problem.is_published
+  problem.updated_at = now
+
+  const listItem = mockProblemList.find((item) => item.id === problemId)
+  if (listItem) {
+    listItem.title = params.title
+    listItem.difficulty = params.difficulty
+    listItem.language = params.language
+    listItem.is_published = params.is_published ?? listItem.is_published
+  }
+}
+
+resetMockProblemState()
+
+export const mockProblem = mockProblemSum
 
 export const mockNotification = {
   id: 1,

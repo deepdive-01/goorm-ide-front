@@ -10,7 +10,10 @@ import { TEACHER_INVITE_STUDENTS_COPY } from '@/content/teacherInviteStudents'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { getRoleSpacesPath } from '@/lib/authRoutes'
-import { formatInviteCode } from '@/lib/inviteCode'
+import {
+  getInviteByEmailErrorMessage,
+  validateInviteEmailInput,
+} from '@/lib/inviteForm'
 import { inviteByEmail } from '@/services/workspace'
 
 const INPUT_CLASS =
@@ -29,8 +32,6 @@ const SEND_BTN = {
   className: 'h-10 gap-2.5 py-0',
   hoverClassName: 'hover:bg-[#8ef48c] active:brightness-95',
 }
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type InviteFieldRowProps = {
   children: ReactNode
@@ -70,29 +71,29 @@ function InviteStudentsContent({ spaceId }: { spaceId: number }) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const displayInviteCode = formatInviteCode(workspace?.invite_code)
+  const inviteCode = workspace?.invite_code ?? ''
 
   const copyInviteCode = useCallback(async () => {
-    if (!workspace?.invite_code || !navigator.clipboard) return
+    if (!inviteCode || !navigator.clipboard) return
 
     try {
-      await navigator.clipboard.writeText(displayInviteCode)
+      await navigator.clipboard.writeText(inviteCode)
       setIsCopied(true)
       window.setTimeout(() => setIsCopied(false), 2000)
     } catch {
       setError(TEACHER_INVITE_STUDENTS_COPY.copyError)
     }
-  }, [displayInviteCode, workspace?.invite_code])
+  }, [inviteCode])
 
   const addEmail = () => {
-    const trimmed = emailInput.trim()
-    if (!trimmed) return
-
-    if (!EMAIL_REGEX.test(trimmed)) {
-      setError(TEACHER_INVITE_STUDENTS_COPY.invalidEmail)
+    const validationError = validateInviteEmailInput(emailInput)
+    if (validationError) {
+      setError(validationError)
       setSuccess(null)
       return
     }
+
+    const trimmed = emailInput.trim()
 
     if (emails.includes(trimmed)) {
       setError(TEACHER_INVITE_STUDENTS_COPY.duplicateEmail)
@@ -114,7 +115,7 @@ function InviteStudentsContent({ spaceId }: { spaceId: number }) {
     if (isSending) return
 
     if (emails.length === 0) {
-      setError(TEACHER_INVITE_STUDENTS_COPY.emailRequired)
+      setError(TEACHER_INVITE_STUDENTS_COPY.emailsRequiredForSend)
       setSuccess(null)
       return
     }
@@ -127,8 +128,8 @@ function InviteStudentsContent({ spaceId }: { spaceId: number }) {
       const { data } = await inviteByEmail(spaceId, { emails })
       setSuccess(TEACHER_INVITE_STUDENTS_COPY.sendSuccess(data.data.sent_count))
       setEmails([])
-    } catch {
-      setError(TEACHER_INVITE_STUDENTS_COPY.sendError)
+    } catch (submitError) {
+      setError(getInviteByEmailErrorMessage(submitError))
     } finally {
       setIsSending(false)
     }
@@ -216,7 +217,7 @@ function InviteStudentsContent({ spaceId }: { spaceId: number }) {
                   className="text-body1 truncate text-gray-400"
                   aria-label={TEACHER_INVITE_STUDENTS_COPY.inviteCodeLabel}
                 >
-                  {displayInviteCode}
+                  {inviteCode || '—'}
                 </p>
               </InviteFieldRow>
             </section>
@@ -239,7 +240,6 @@ function InviteStudentsContent({ spaceId }: { spaceId: number }) {
                     <button
                       type="button"
                       onClick={addEmail}
-                      disabled={!emailInput.trim()}
                       aria-label={TEACHER_INVITE_STUDENTS_COPY.addEmail}
                       className={INLINE_ACTION_BTN}
                     >

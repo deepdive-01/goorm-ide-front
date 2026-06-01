@@ -14,10 +14,10 @@ const HIGHLIGHT_CLASS = 'code-feedback-line-highlight'
 const SELECTION_HIGHLIGHT_CLASS = 'code-feedback-line-selection'
 
 const MONACO_LANGUAGE: Record<Language, string> = {
-  python: 'python',
-  java: 'java',
-  javascript: 'javascript',
-  cpp: 'cpp',
+  PYTHON: 'python',
+  JAVA: 'java',
+  JAVASCRIPT: 'javascript',
+  CPP: 'cpp',
 }
 
 type MarkerLayout = {

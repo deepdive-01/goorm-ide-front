@@ -1,5 +1,33 @@
 import { http, HttpResponse } from 'msw'
-import { mockFileProblemDetail, mockSubmissionDetail } from '../fixtures'
+import type { CreateProblemRequest } from '@/types/problem.type'
+import {
+  createMockProblem,
+  mockFileProblemDetail,
+  mockProblem,
+  mockProblemsById,
+  mockSubmissionDetail,
+  replaceMockProblemTestcases,
+  updateMockProblem,
+} from '../fixtures'
+
+function readNumberField(body: Record<string, unknown>, snakeKey: string, camelKey: string): number {
+  const snake = body[snakeKey]
+  if (typeof snake === 'number' && Number.isFinite(snake)) {
+    return snake
+  }
+
+  const camel = body[camelKey]
+  if (typeof camel === 'number' && Number.isFinite(camel)) {
+    return camel
+  }
+
+  return 0
+}
+
+function readStringField(body: Record<string, unknown>, key: string): string {
+  const value = body[key]
+  return typeof value === 'string' ? value : ''
+}
 
 export const fileHandlers = [
   http.post('*/api/v1/files/problems/custom', () =>
@@ -56,23 +84,88 @@ export const fileHandlers = [
     }),
   ),
 
-  http.post('*/api/v1/files/problems/:problemId/testcases', () =>
+  http.post('*/api/v1/files/problems/:problemId/testcases', async ({ request, params }) => {
+    const body = (await request.json()) as Array<Record<string, unknown>>
+    const problemId = Number(params.problemId)
+    replaceMockProblemTestcases(problemId, body)
+
+    return HttpResponse.json({
+      status: 200,
+      code: 'SUCCESS',
+      message: '테스트케이스 저장 성공',
+      data: null,
+    })
+  }),
+
+  http.post('*/api/v1/files/problems', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const payload: CreateProblemRequest & { spaceId: number; createdBy: number } = {
+      spaceId: readNumberField(body, 'space_id', 'spaceId'),
+      createdBy: readNumberField(body, 'created_by', 'createdBy'),
+      title: readStringField(body, 'title'),
+      description: readStringField(body, 'description'),
+      difficulty: readStringField(body, 'difficulty') as CreateProblemRequest['difficulty'],
+      language: readStringField(body, 'language') as CreateProblemRequest['language'],
+      starter_code: readStringField(body, 'starter_code') || readStringField(body, 'starterCode'),
+      testcases: [],
+    }
+
+    const created = createMockProblem(payload)
+
+    return HttpResponse.json({
+      status: 200,
+      code: 'SUCCESS',
+      message: '문항이 생성됐습니다.',
+      data: created,
+    })
+  }),
+
+  http.patch('*/api/v1/files/problems/:problemId/code', () =>
     HttpResponse.json({
-      status: 201,
-      code: 'CREATED',
-      message: '테스트케이스 추가 성공',
-      data: 101,
+      status: 200,
+      code: 'OK',
+      message: '코드 임시 저장 성공',
+      data: null,
     }),
   ),
 
-  http.post('*/api/v1/files/problems', () =>
-    HttpResponse.json({
-      status: 201,
-      code: 'CREATED',
-      message: '문제 할당 성공',
-      data: 1,
-    }),
-  ),
+  http.put('*/api/v1/files/problems/:problemId', async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const problemId = Number(params.problemId)
+
+    updateMockProblem(problemId, {
+      title: readStringField(body, 'title'),
+      description: readStringField(body, 'description'),
+      difficulty: readStringField(body, 'difficulty') as CreateProblemRequest['difficulty'],
+      language: readStringField(body, 'language') as CreateProblemRequest['language'],
+      starter_code: readStringField(body, 'starter_code') || readStringField(body, 'starterCode'),
+      is_published:
+        typeof body.is_published === 'boolean'
+          ? body.is_published
+          : typeof body.isPublished === 'boolean'
+            ? body.isPublished
+            : undefined,
+    })
+
+    const problem = mockProblemsById[problemId] ?? mockProblem
+
+    return HttpResponse.json({
+      status: 200,
+      code: 'SUCCESS',
+      message: '문항이 수정됐습니다.',
+      data: {
+        id: problem.id,
+        space_id: problem.space_id,
+        created_by: problem.created_by,
+        problem_bank_id: problem.problem_bank_id,
+        title: problem.title,
+        difficulty: problem.difficulty,
+        language: problem.language,
+        is_published: problem.is_published,
+        created_at: problem.created_at,
+      },
+    })
+  }),
 
   http.patch('*/api/v1/files/problems/:problemId', () =>
     HttpResponse.json({

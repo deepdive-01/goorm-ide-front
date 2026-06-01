@@ -3,7 +3,11 @@ import '@testing-library/jest-dom'
 // TODO: MSW - API 테스트 (실제 API 연결 후 삭제 예정)
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
 import { server } from '../mocks/server'
-import { resetMockAuthState, resetMockWorkspaceState } from '../mocks/fixtures'
+import {
+  resetMockAuthState,
+  resetMockProblemState,
+  resetMockWorkspaceState,
+} from '../mocks/fixtures'
 
 const MSW_ENABLED = import.meta.env.VITE_MSW_ENABLED === 'true'
 
@@ -24,6 +28,7 @@ if (MSW_ENABLED) {
 beforeEach(() => {
   resetMockAuthState()
   resetMockWorkspaceState()
+  resetMockProblemState()
   localStorage.setItem('access_token', 'mock-token')
 })
 

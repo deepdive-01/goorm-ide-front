@@ -15,7 +15,7 @@ describe('CodeFeedbackEditor', () => {
     render(
       <CodeFeedbackEditor
         code={MOCK_CODE_FEEDBACK_SAMPLE}
-        language="python"
+        language="PYTHON"
         comments={[...MOCK_CODE_LINE_COMMENTS]}
         height="180px"
       />,

@@ -18,7 +18,7 @@ describe('StudentCodeCommentCard', () => {
           message: 'map 함수를 사용해 깔끔하게 처리했네요!',
         }}
         code={MOCK_CODE_FEEDBACK_SAMPLE}
-        language="python"
+        language="PYTHON"
       />,
     )
 
