@@ -42,9 +42,13 @@ function Editor({
   onRun,
   onSave,
   onSubmit,
+  onCancelSubmit,
+  canCancelSubmit = false,
+  cancelSubmitLabel,
   isRunning = false,
   isSaving = false,
   isSubmitting = false,
+  isCancelling = false,
   disabled = false,
   executionResult,
   gradeResult,
@@ -92,9 +96,13 @@ function Editor({
         onRun={handleRun}
         onSave={onSave}
         onSubmit={onSubmit}
+        onCancelSubmit={onCancelSubmit}
+        canCancelSubmit={canCancelSubmit}
+        cancelSubmitLabel={cancelSubmitLabel}
         isRunning={isRunning}
         isSaving={isSaving}
         isSubmitting={isSubmitting}
+        isCancelling={isCancelling}
         disabled={disabled}
       />
       <CodeEditor

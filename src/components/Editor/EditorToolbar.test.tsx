@@ -93,6 +93,70 @@ describe('EditorToolbar', () => {
     expect(screen.getByRole('button', { name: 'run' })).not.toBeDisabled()
   })
 
+  test('canCancelSubmit이 true이면 제출 버튼 옆에 제출 취소 버튼을 렌더링한다', () => {
+    renderWithRouter(
+      <EditorToolbar
+        {...defaultProps}
+        canCancelSubmit
+        onCancelSubmit={vi.fn()}
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'cancel-submit' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('제출 취소')).toBeInTheDocument()
+  })
+
+  test('canCancelSubmit이 false이면 제출 취소 버튼을 렌더링하지 않는다', () => {
+    renderWithRouter(<EditorToolbar {...defaultProps} />)
+
+    expect(
+      screen.queryByRole('button', { name: 'cancel-submit' }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('제출 취소 버튼 클릭 시 onCancelSubmit을 호출한다', async () => {
+    const onCancelSubmit = vi.fn()
+    const user = userEvent.setup()
+
+    renderWithRouter(
+      <EditorToolbar
+        {...defaultProps}
+        canCancelSubmit
+        onCancelSubmit={onCancelSubmit}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'cancel-submit' }))
+
+    expect(onCancelSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  test('disabled 또는 isSubmitting이면 제출 취소 버튼이 비활성화된다', () => {
+    const { rerender } = renderWithRouter(
+      <EditorToolbar
+        {...defaultProps}
+        canCancelSubmit
+        onCancelSubmit={vi.fn()}
+        disabled
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'cancel-submit' })).toBeDisabled()
+
+    rerender(
+      <EditorToolbar
+        {...defaultProps}
+        canCancelSubmit
+        onCancelSubmit={vi.fn()}
+        isSubmitting
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'cancel-submit' })).toBeDisabled()
+  })
+
   test('드롭다운 외부 클릭 시 드롭다운이 닫힌다', async () => {
     const user = userEvent.setup()
     renderWithRouter(<EditorToolbar {...defaultProps} />)

@@ -41,9 +41,13 @@ export interface EditorProps {
   onRun?: (stdin: string) => void
   onSave?: () => void
   onSubmit?: () => void
+  onCancelSubmit?: () => void
+  canCancelSubmit?: boolean
+  cancelSubmitLabel?: string
   isRunning?: boolean
   isSaving?: boolean
   isSubmitting?: boolean
+  isCancelling?: boolean
   disabled?: boolean
 
   executionResult?: ExecutionResult | null
@@ -69,9 +73,13 @@ export interface EditorToolbarProps {
   onRun?: () => void
   onSave?: () => void
   onSubmit?: () => void
+  onCancelSubmit?: () => void
+  canCancelSubmit?: boolean
+  cancelSubmitLabel?: string
   isRunning?: boolean
   isSaving?: boolean
   isSubmitting?: boolean
+  isCancelling?: boolean
   disabled?: boolean
 }
 

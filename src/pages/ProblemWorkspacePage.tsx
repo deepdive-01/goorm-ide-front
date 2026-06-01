@@ -15,6 +15,7 @@ import {
   STUDENT_PROBLEM_WORKSPACE_COPY,
 } from '@/content/studentProblemWorkspace'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useEditorPage } from '@/hooks/useEditorPage'
 import { useProblem } from '@/hooks/useProblem'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { toEditorLanguage } from '@/lib/problemLanguage'
@@ -173,23 +174,62 @@ function ProblemWorkspaceLoaded({
           </section>
 
           <section className="flex flex-col gap-4 lg:col-span-7">
-            <Editor
-              roomId={spaceId}
-              width="w-full"
-              height="45vh"
-              initialCode={problem.starter_code ?? ''}
-              initialLanguage={toEditorLanguage(problem.language)}
-              testCases={
-                problem.testcases?.map((tc) => ({
-                  input: tc.input,
-                  expectedOutput: tc.expected_output,
-                })) ?? []
-              }
-            />
+            <ProblemWorkspaceEditor problemId={problem.id} roomId={spaceId} />
           </section>
         </div>
       </main>
     </div>
+  )
+}
+
+function ProblemWorkspaceEditor({
+  problemId,
+  roomId,
+}: {
+  problemId: number
+  roomId: number
+}) {
+  const {
+    language,
+    value,
+    isReady,
+    isSaving,
+    isSubmitting,
+    isCancelling,
+    canCancelSubmit,
+    gradeResult,
+    executionResult,
+    isRunning,
+    setLanguage,
+    onChange,
+    handleRun,
+    handleSave,
+    handleSubmit,
+    handleCancelSubmit,
+  } = useEditorPage({ problemId, roomId })
+
+  return (
+    <Editor
+      language={language}
+      value={value}
+      onChange={onChange}
+      onLanguageChange={setLanguage}
+      onRun={handleRun}
+      onSave={handleSave}
+      onSubmit={handleSubmit}
+      onCancelSubmit={() => void handleCancelSubmit()}
+      canCancelSubmit={canCancelSubmit}
+      cancelSubmitLabel={STUDENT_PROBLEM_WORKSPACE_COPY.editor.cancelSubmit}
+      isRunning={isRunning}
+      isSaving={isSaving}
+      isSubmitting={isSubmitting}
+      isCancelling={isCancelling}
+      disabled={!isReady}
+      executionResult={executionResult}
+      gradeResult={gradeResult}
+      height="45vh"
+      className="w-full"
+    />
   )
 }
 

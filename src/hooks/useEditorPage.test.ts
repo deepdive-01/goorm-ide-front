@@ -23,23 +23,31 @@ vi.mock('@/services/file', () => ({
   getSubmission: vi.fn(),
   updateSubmission: vi.fn(),
   submitCode: vi.fn(),
+  deleteSubmission: vi.fn(),
 }))
 
 vi.mock('@/services/codeExecutionService', () => ({
   gradeCode: vi.fn(),
 }))
 
-import { getSubmission, updateSubmission, submitCode } from '@/services/file'
+import {
+  deleteSubmission,
+  getSubmission,
+  submitCode,
+  updateSubmission,
+} from '@/services/file'
 import { gradeCode } from '@/services/codeExecutionService'
 
 const mockGetSubmission = vi.mocked(getSubmission)
 const mockUpdateSubmission = vi.mocked(updateSubmission)
 const mockSubmitCode = vi.mocked(submitCode)
+const mockDeleteSubmission = vi.mocked(deleteSubmission)
 const mockGradeCode = vi.mocked(gradeCode)
 
 const makeSubmissionResponse = (
   saved_code: string | null = null,
   submitted_code: string | null = null,
+  submissionStatus: string = submitted_code ? 'PENDING' : 'DRAFT',
 ) =>
   createAxiosResponse({
     status: 200,
@@ -51,7 +59,7 @@ const makeSubmissionResponse = (
       student_id: mockStudentUser.id,
       saved_code,
       submitted_code,
-      status: 'DRAFT',
+      status: submissionStatus,
       execution_time_ms: null,
       execution_memory_kb: null,
       error_message: null,
@@ -79,6 +87,7 @@ describe('useEditorPage', () => {
     mockGetSubmission.mockResolvedValue(makeSubmissionResponse('saved code'))
     mockUpdateSubmission.mockResolvedValue(makeNullResponse())
     mockSubmitCode.mockResolvedValue(makeNullResponse())
+    mockDeleteSubmission.mockResolvedValue(makeNullResponse())
     mockGradeCode.mockResolvedValue(passGradeResult)
   })
 
@@ -164,6 +173,48 @@ describe('useEditorPage', () => {
       is_final_submit: true,
     })
     expect(mockGradeCode).not.toHaveBeenCalled()
+    expect(mockGetSubmission).toHaveBeenCalledTimes(2)
+  })
+
+  test('status가 PENDING이면 canCancelSubmit이 true이다', async () => {
+    mockGetSubmission.mockResolvedValue(
+      makeSubmissionResponse('saved', 'submitted code'),
+    )
+
+    const { result } = renderHook(() => useEditorPage(defaultParams))
+
+    await waitFor(() => {
+      expect(result.current.canCancelSubmit).toBe(true)
+    })
+  })
+
+  test('status가 DRAFT이면 canCancelSubmit이 false이다', async () => {
+    mockGetSubmission.mockResolvedValue(makeSubmissionResponse(null, null))
+
+    const { result } = renderHook(() => useEditorPage(defaultParams))
+
+    await waitFor(() => expect(result.current.isReady).toBe(true))
+
+    expect(result.current.canCancelSubmit).toBe(false)
+  })
+
+  test('handleCancelSubmit 호출 시 deleteSubmission 후 제출 상태를 갱신한다', async () => {
+    mockGetSubmission
+      .mockResolvedValueOnce(makeSubmissionResponse('saved', 'submitted code'))
+      .mockResolvedValueOnce(makeSubmissionResponse('saved', null, 'DRAFT'))
+
+    const { result } = renderHook(() => useEditorPage(defaultParams))
+
+    await waitFor(() => expect(result.current.canCancelSubmit).toBe(true))
+
+    await act(async () => {
+      await result.current.handleCancelSubmit()
+    })
+
+    expect(mockDeleteSubmission).toHaveBeenCalledWith(3, mockStudentUser.id)
+    await waitFor(() => {
+      expect(result.current.canCancelSubmit).toBe(false)
+    })
   })
 
   test('handleRun 호출 시 run을 호출한다', async () => {

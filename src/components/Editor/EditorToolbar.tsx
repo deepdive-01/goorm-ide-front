@@ -18,9 +18,13 @@ function EditorToolbar({
   onRun,
   onSave,
   onSubmit,
+  onCancelSubmit,
+  canCancelSubmit = false,
+  cancelSubmitLabel = '제출 취소',
   isRunning = false,
   isSaving = false,
   isSubmitting = false,
+  isCancelling = false,
   disabled = false,
 }: EditorToolbarProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -104,6 +108,22 @@ function EditorToolbar({
         >
           <Save size={16} />
         </Button>
+
+        {canCancelSubmit && (
+          <Button
+            ariaLabel="cancel-submit"
+            bgColor="bg-transparent"
+            textClassName="text-body2 whitespace-nowrap"
+            textColor="text-gray-300"
+            className="border-gray-800 border"
+            size="md"
+            isLoading={isCancelling}
+            disabled={disabled || isSubmitting || isCancelling}
+            onClick={onCancelSubmit}
+          >
+            {cancelSubmitLabel}
+          </Button>
+        )}
 
         <Button
           ariaLabel="submit"

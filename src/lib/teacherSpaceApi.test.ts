@@ -127,7 +127,9 @@ describe('submissionMapper', () => {
         >
       }
 
-      return { data: { data: [] } } as Awaited<ReturnType<typeof getFeedbacks>>
+      return { data: { data: [] } } as unknown as Awaited<
+        ReturnType<typeof getFeedbacks>
+      >
     })
 
     const result = await attachSubmissionFeedbackCounts([

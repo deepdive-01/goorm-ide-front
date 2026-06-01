@@ -5,6 +5,7 @@ import type {
   ProblemCreated,
   ProblemDetail,
 } from '@/types/problem.type'
+import type { SubmissionDetail } from '@/types/file.type'
 import type { TeacherSubmissionReviewDetail } from '@/types/teacherSubmissionReview.type'
 import type { UserInfo } from '@/types/user.type'
 import type { WorkspaceListItem } from '@/types/workspace.type'
@@ -448,6 +449,9 @@ const INITIAL_MOCK_PROBLEM_LIST: MockProblemListItem[] = [
 
 export let mockProblemsById: Record<number, MockProblemDetail> = {}
 export let mockProblemList: MockProblemListItem[] = []
+export let mockSubmissionsByProblemId: Record<number, SubmissionDetail> = {}
+
+const MOCK_STUDENT_SAVED_CODE = 'a, b = map(int, input().split())\nprint(a + b)'
 
 let nextMockProblemId = 1
 
@@ -462,6 +466,91 @@ function cloneMockProblemListItem(item: MockProblemListItem): MockProblemListIte
   return { ...item }
 }
 
+function createMockSubmissionDetail(
+  problemId: number,
+  overrides: Partial<SubmissionDetail> = {},
+): SubmissionDetail {
+  return {
+    id: problemId,
+    problem_id: problemId,
+    student_id: mockStudentUser.id,
+    saved_code: MOCK_STUDENT_SAVED_CODE,
+    submitted_code: null,
+    status: 'DRAFT',
+    execution_time_ms: null,
+    execution_memory_kb: null,
+    error_message: null,
+    created_at: '2026-06-01T00:00:00Z',
+    updated_at: '2026-06-01T00:00:00Z',
+    ...overrides,
+  }
+}
+
+function buildInitialMockSubmissions(): Record<number, SubmissionDetail> {
+  const submissions: Record<number, SubmissionDetail> = {}
+
+  for (const item of INITIAL_MOCK_PROBLEM_LIST) {
+    if (item.submission_status === 'SUBMITTED') {
+      submissions[item.id] = createMockSubmissionDetail(item.id, {
+        submitted_code: MOCK_STUDENT_SAVED_CODE,
+        status: 'PENDING',
+      })
+    } else if (item.submission_status === 'COMPLETED') {
+      submissions[item.id] = createMockSubmissionDetail(item.id, {
+        submitted_code: MOCK_STUDENT_SAVED_CODE,
+        status: 'COMPLETED',
+      })
+    } else {
+      submissions[item.id] = createMockSubmissionDetail(item.id, { status: 'DRAFT' })
+    }
+  }
+
+  return submissions
+}
+
+export function resetMockSubmissionState(): void {
+  mockSubmissionsByProblemId = buildInitialMockSubmissions()
+}
+
+export function getMockSubmissionDetail(problemId: number): SubmissionDetail {
+  const existing = mockSubmissionsByProblemId[problemId]
+  if (existing) {
+    return { ...existing }
+  }
+
+  return createMockSubmissionDetail(problemId)
+}
+
+export function applyMockSubmit(problemId: number, submittedCode: string) {
+  const current = getMockSubmissionDetail(problemId)
+  mockSubmissionsByProblemId[problemId] = {
+    ...current,
+    submitted_code: submittedCode,
+    status: 'PENDING',
+    updated_at: new Date().toISOString(),
+  }
+
+  const listItem = mockProblemList.find((item) => item.id === problemId)
+  if (listItem) {
+    listItem.submission_status = 'SUBMITTED'
+  }
+}
+
+export function applyMockCancelSubmit(problemId: number) {
+  const current = getMockSubmissionDetail(problemId)
+  mockSubmissionsByProblemId[problemId] = {
+    ...current,
+    submitted_code: null,
+    status: 'DRAFT',
+    updated_at: new Date().toISOString(),
+  }
+
+  const listItem = mockProblemList.find((item) => item.id === problemId)
+  if (listItem) {
+    listItem.submission_status = 'NOT_SUBMITTED'
+  }
+}
+
 export function resetMockProblemState(): void {
   mockProblemsById = Object.fromEntries(
     Object.entries(INITIAL_MOCK_PROBLEMS_BY_ID).map(([id, problem]) => [
@@ -470,6 +559,7 @@ export function resetMockProblemState(): void {
     ]),
   )
   mockProblemList = INITIAL_MOCK_PROBLEM_LIST.map(cloneMockProblemListItem)
+  resetMockSubmissionState()
   nextMockProblemId =
     Object.keys(INITIAL_MOCK_PROBLEMS_BY_ID).reduce((maxId, id) => {
       return Math.max(maxId, Number(id))

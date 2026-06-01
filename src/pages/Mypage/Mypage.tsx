@@ -1,5 +1,6 @@
 import Profile from './Profile'
 import Notification from '@/components/Notification/Notification'
+import SubmitCheck from '@/pages/MyPage/SubmitCheck'
 
 function Mypage() {
   return (
@@ -18,8 +19,8 @@ function Mypage() {
           <Profile />
           <Notification variant="page" />
         </div>
-
         {/* Right Content */}
+        <SubmitCheck />
       </div>
     </div>
   )

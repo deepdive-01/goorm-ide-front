@@ -74,6 +74,14 @@ export const Submitting: Story = {
   },
 }
 
+export const WithCancelSubmit: Story = {
+  name: '제출 취소 가능 (제출 버튼 옆)',
+  args: {
+    canCancelSubmit: true,
+    onCancelSubmit: () => {},
+  },
+}
+
 export const WithExecutionSuccess: Story = {
   name: '실행 성공 (STDOUT)',
   args: {

@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { getProblems } from '@/services/problem'
-import type { ProblemListItem, ProblemListParams } from '@/types/problem.type'
+import type {
+  ProblemList,
+  ProblemListItem,
+  ProblemListParams,
+} from '@/types/problem.type'
 
 interface UseProblemsResult {
   problems: ProblemListItem[]
@@ -16,7 +20,12 @@ export function useProblems(spaceId: number, params?: ProblemListParams): UsePro
     const fetch = async () => {
       try {
         const { data } = await getProblems(spaceId, params)
-        setProblems(Array.isArray(data.data) ? data.data : data.data.problems)
+        const payload = data.data
+        setProblems(
+          Array.isArray(payload)
+            ? payload
+            : ((payload as ProblemList).problems ?? []),
+        )
       } catch {
         setProblems([])
       } finally {
