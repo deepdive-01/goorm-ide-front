@@ -331,17 +331,26 @@ function ProblemFormEditor({
             <h1 className="text-head3 text-white">{pageTitle}</h1>
           </div>
 
-          <Button
-            type="submit"
-            form={formId}
-            isLoading={isSaving}
-            disabled={isSaving}
-            ariaLabel={TEACHER_CREATE_PROBLEM_COPY.save}
-            {...SAVE_BTN}
-          >
-            <Save className="size-4 shrink-0" aria-hidden />
-            {isSaving ? TEACHER_CREATE_PROBLEM_COPY.saving : TEACHER_CREATE_PROBLEM_COPY.save}
-          </Button>
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+            {error && (
+              <p className="text-body3 max-w-md text-right text-red-400" role="alert">
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              form={formId}
+              isLoading={isSaving}
+              disabled={isSaving}
+              ariaLabel={TEACHER_CREATE_PROBLEM_COPY.save}
+              {...SAVE_BTN}
+            >
+              <Save className="size-4 shrink-0" aria-hidden />
+              {isSaving
+                ? TEACHER_CREATE_PROBLEM_COPY.saving
+                : TEACHER_CREATE_PROBLEM_COPY.save}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -546,12 +555,6 @@ function ProblemFormEditor({
               </section>
             </Card>
           </div>
-
-          {error && (
-            <p className="text-body3 text-red-400 lg:col-span-2" role="alert">
-              {error}
-            </p>
-          )}
         </form>
       </main>
     </div>
