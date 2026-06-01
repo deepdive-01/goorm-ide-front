@@ -24,6 +24,7 @@ export const STUDENT_PROBLEM_WORKSPACE_COPY = {
     title: '코드 에디터',
     run: '실행',
     submit: '제출',
+    cancelSubmit: '제출 취소',
   },
   invalidParams: '문항을 찾을 수 없습니다.',
 } as const

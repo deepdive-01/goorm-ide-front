@@ -1,11 +1,13 @@
 import { http, HttpResponse } from 'msw'
 import type { CreateProblemRequest } from '@/types/problem.type'
 import {
+  applyMockCancelSubmit,
+  applyMockSubmit,
   createMockProblem,
+  getMockSubmissionDetail,
   mockFileProblemDetail,
   mockProblem,
   mockProblemsById,
-  mockSubmissionDetail,
   replaceMockProblemTestcases,
   updateMockProblem,
 } from '../fixtures'
@@ -39,23 +41,34 @@ export const fileHandlers = [
     }),
   ),
 
-  http.post('*/api/v1/files/submissions', () =>
-    HttpResponse.json({
+  http.post('*/api/v1/files/submissions', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    const problemId = readNumberField(body, 'problem_id', 'problemId')
+    const submittedCode = readStringField(body, 'submitted_code') ||
+      readStringField(body, 'submittedCode')
+
+    if (problemId > 0 && submittedCode) {
+      applyMockSubmit(problemId, submittedCode)
+    }
+
+    return HttpResponse.json({
       status: 200,
       code: 'OK',
       message: '코드가 성공적으로 제출되었습니다.',
       data: null,
-    }),
-  ),
+    })
+  }),
 
-  http.get('*/api/v1/files/submissions/:problemId/:userId', () =>
-    HttpResponse.json({
+  http.get('*/api/v1/files/submissions/:problemId/:userId', ({ params }) => {
+    const problemId = Number(params.problemId)
+
+    return HttpResponse.json({
       status: 200,
       code: 'OK',
       message: '제출 정보를 조회했습니다.',
-      data: mockSubmissionDetail,
-    }),
-  ),
+      data: getMockSubmissionDetail(problemId),
+    })
+  }),
 
   http.put('*/api/v1/files/submissions/:problemId/:userId', () =>
     HttpResponse.json({
@@ -66,14 +79,17 @@ export const fileHandlers = [
     }),
   ),
 
-  http.delete('*/api/v1/files/submissions/:problemId/:userId', () =>
-    HttpResponse.json({
+  http.delete('*/api/v1/files/submissions/:problemId/:userId', ({ params }) => {
+    const problemId = Number(params.problemId)
+    applyMockCancelSubmit(problemId)
+
+    return HttpResponse.json({
       status: 200,
       code: 'OK',
       message: '제출이 취소되었습니다.',
       data: null,
-    }),
-  ),
+    })
+  }),
 
   http.delete('*/api/v1/files/problems/:problemId/reset', () =>
     HttpResponse.json({
