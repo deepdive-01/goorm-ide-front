@@ -5,7 +5,9 @@ import Logo from '@/components/common/Logo'
 import Spinner from '@/components/common/Spinner/Spinner'
 import {
   clearAccessToken,
+  clearOAuthIntendedRole,
   getRoleHomePath,
+  resolveOAuthRole,
   saveAccessToken,
 } from '@/lib/auth'
 import { getMe } from '@/services/user'
@@ -13,7 +15,11 @@ import { getMe } from '@/services/user'
 function OAuthCallbackPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const accessToken = searchParams.get('accessToken') ?? ''
+  const accessToken =
+    searchParams.get('access_token') ??
+    searchParams.get('accessToken') ??
+    ''
+  const intendedRole = resolveOAuthRole(searchParams.get('role'))
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -29,14 +35,24 @@ function OAuthCallbackPage() {
 
       try {
         const { data } = await getMe()
+        const userRole = data.data.role
 
         if (!isMounted) {
           return
         }
 
-        navigate(getRoleHomePath(data.data.role), { replace: true })
+        if (intendedRole && intendedRole !== userRole) {
+          clearAccessToken()
+          clearOAuthIntendedRole()
+          navigate('/login?error=oauth_role_mismatch', { replace: true })
+          return
+        }
+
+        clearOAuthIntendedRole()
+        navigate(getRoleHomePath(userRole), { replace: true })
       } catch {
         clearAccessToken()
+        clearOAuthIntendedRole()
 
         if (!isMounted) {
           return
@@ -51,7 +67,7 @@ function OAuthCallbackPage() {
     return () => {
       isMounted = false
     }
-  }, [accessToken, navigate])
+  }, [accessToken, intendedRole, navigate])
 
   return (
     <div className="bg-[#151515] flex min-h-screen flex-col items-center justify-center gap-5 px-4 py-8">

@@ -29,7 +29,7 @@ function CodeEditorPanel({
   return (
     <Card
       width="w-full"
-      className="bg-black border-gray-800 flex min-h-[320px] flex-col gap-4 p-0 overflow-hidden"
+      className="bg-black border-gray-800 flex min-h-[320px] flex-col gap-4 overflow-hidden p-0"
     >
       <div className="border-gray-800 flex items-center justify-between gap-3 border-b px-5 py-4">
         <div className="flex items-center gap-2">
@@ -57,7 +57,7 @@ function CodeEditorPanel({
         </div>
       </div>
 
-      <div className="relative flex flex-1 min-h-[240px]">
+      <div className="relative flex min-h-[240px] flex-1">
         <div
           className="text-body3 text-gray-600 border-gray-800 flex flex-col items-end border-r px-4 py-4 font-mono select-none"
           aria-hidden

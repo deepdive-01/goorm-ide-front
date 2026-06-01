@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getProblem } from '@/services/problem'
+import { getProblem, getProblemTestcases } from '@/services/problem'
 import type { ProblemDetail } from '@/types/problem.type'
 
 interface UseProblemResult {
@@ -17,8 +17,20 @@ export function useProblem(
   useEffect(() => {
     const fetch = async () => {
       try {
-        const { data } = await getProblem(spaceId, problemId)
-        setProblem(data.data)
+        const [{ data: detail }, testcasesResult] = await Promise.all([
+          getProblem(spaceId, problemId),
+          getProblemTestcases(problemId).catch(() => null),
+        ])
+
+        const testcasesFromDetail = detail.data.testcases ?? []
+        const testcases =
+          testcasesResult?.data.data ??
+          (Array.isArray(testcasesFromDetail) ? testcasesFromDetail : [])
+
+        setProblem({
+          ...detail.data,
+          testcases,
+        })
       } catch {
         setProblem(null)
       } finally {

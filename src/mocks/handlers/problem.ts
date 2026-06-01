@@ -59,6 +59,15 @@ export const problemHandlers = [
     }),
   ),
 
+  http.get('*/api/v1/files/problems/space/:spaceId', () =>
+    HttpResponse.json({
+      status: 200,
+      code: 'SUCCESS',
+      message: '워크스페이스 문제 목록 조회에 성공하였습니다.',
+      data: mockProblemList,
+    }),
+  ),
+
   http.get('*/api/v1/spaces/:spaceId/problems/:problemId', ({ params }) => {
     const problemId = Number(params.problemId)
     const problem =
@@ -70,6 +79,35 @@ export const problemHandlers = [
       code: 'SUCCESS',
       message: '문항 상세 정보를 조회했습니다.',
       data: problem,
+    })
+  }),
+
+  http.get('*/api/v1/files/problems/:problemId', ({ params }) => {
+    const problemId = Number(params.problemId)
+    const problem =
+      mockProblemsById[problemId as keyof typeof mockProblemsById] ??
+      mockProblem
+    const { testcases: _testcases, ...problemWithoutTestcases } = problem
+
+    return HttpResponse.json({
+      status: 200,
+      code: 'SUCCESS',
+      message: '문항 상세 정보를 조회했습니다.',
+      data: problemWithoutTestcases,
+    })
+  }),
+
+  http.get('*/api/v1/files/problems/:problemId/testcases', ({ params }) => {
+    const problemId = Number(params.problemId)
+    const problem =
+      mockProblemsById[problemId as keyof typeof mockProblemsById] ??
+      mockProblem
+
+    return HttpResponse.json({
+      status: 200,
+      code: 'SUCCESS',
+      message: '문항 테스트케이스를 조회했습니다.',
+      data: problem.testcases,
     })
   }),
 

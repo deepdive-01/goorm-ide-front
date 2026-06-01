@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useProblems } from '@/hooks/useProblems'
+import { useSpaceSubmissions } from '@/hooks/useSpaceSubmissions'
 import { useWorkspace } from '@/hooks/useWorkspace'
+import { mockTeacherSpaceSubmissions } from '@/mocks/fixtures'
 import { renderWithRouter } from '@/tests/utils'
 import type { StudentProblemListItem } from '@/types/studentProblem.type'
 import SpaceDetailPage from './SpaceDetailPage'
@@ -41,6 +43,10 @@ vi.mock('@/hooks/useProblems', () => ({
   useProblems: vi.fn(),
 }))
 
+vi.mock('@/hooks/useSpaceSubmissions', () => ({
+  useSpaceSubmissions: vi.fn(),
+}))
+
 describe('SpaceDetailPage', () => {
   beforeEach(() => {
     vi.mocked(useCurrentUser).mockReturnValue({
@@ -70,11 +76,18 @@ describe('SpaceDetailPage', () => {
         created_at: '2025-05-11T13:00:00Z',
       },
       isLoading: false,
+      error: null,
     })
 
     vi.mocked(useProblems).mockReturnValue({
       problems: mockTeacherProblems,
       isLoading: false,
+    })
+
+    vi.mocked(useSpaceSubmissions).mockReturnValue({
+      submissions: mockTeacherSpaceSubmissions,
+      isLoading: false,
+      error: null,
     })
   })
 
@@ -111,7 +124,28 @@ describe('SpaceDetailPage', () => {
 
     expect(screen.getByRole('heading', { name: '최학생' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '정학생' })).toBeInTheDocument()
-    expect(screen.getAllByText('댓글 1')).toHaveLength(2)
+    expect(screen.getAllByText('댓글 0')).toHaveLength(1)
+    expect(screen.getAllByText('댓글 1')).toHaveLength(1)
     expect(screen.queryByText('피보나치 수열')).not.toBeInTheDocument()
+  })
+
+  test('제출 카드를 클릭하면 제출 리뷰 화면으로 이동한다', async () => {
+    const user = userEvent.setup()
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/teacher/spaces/:spaceId" element={<SpaceDetailPage />} />
+        <Route
+          path="/teacher/spaces/:spaceId/submissions/:submissionId"
+          element={<div>submission review</div>}
+        />
+      </Routes>,
+      { route: '/teacher/spaces/1' },
+    )
+
+    await user.click(screen.getByRole('tab', { name: '제출 현황' }))
+    await user.click(screen.getByRole('heading', { name: '최학생' }))
+
+    expect(screen.getByText('submission review')).toBeInTheDocument()
   })
 })

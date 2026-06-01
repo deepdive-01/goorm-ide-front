@@ -1,12 +1,14 @@
 import userEvent from '@testing-library/user-event'
 import { screen, waitFor } from '@testing-library/react'
 import { createAxiosResponse, renderWithRouter } from '@/tests/utils'
+import { createAxiosError } from '@/tests/authTestUtils'
 import {
   login,
   sendEmailCode,
   signup,
   verifyEmailCode,
 } from '@/services/auth'
+import { getMe } from '@/services/user'
 import SignupPage from './SignupPage'
 
 const mockedNavigate = vi.fn()
@@ -29,6 +31,10 @@ vi.mock('@/services/auth', () => ({
   verifyEmailCode: vi.fn(),
 }))
 
+vi.mock('@/services/user', () => ({
+  getMe: vi.fn(),
+}))
+
 describe('SignupPage', () => {
   beforeEach(() => {
     mockedNavigate.mockReset()
@@ -36,6 +42,7 @@ describe('SignupPage', () => {
     vi.mocked(login).mockReset()
     vi.mocked(sendEmailCode).mockReset()
     vi.mocked(verifyEmailCode).mockReset()
+    vi.mocked(getMe).mockReset()
     localStorage.clear()
   })
 
@@ -84,6 +91,22 @@ describe('SignupPage', () => {
         },
       }),
     )
+    vi.mocked(getMe).mockResolvedValue(
+      createAxiosResponse({
+        status: 200,
+        code: 'SUCCESS',
+        message: 'OK',
+        data: {
+          id: 1,
+          email: 'student@example.com',
+          name: '홍길동',
+          nickname: '길동이',
+          role: 'STUDENT',
+          profile_image_url: null,
+          created_at: '2025-05-11T13:00:00Z',
+        },
+      }),
+    )
 
     renderWithRouter(<SignupPage />)
 
@@ -109,14 +132,14 @@ describe('SignupPage', () => {
       })
     })
 
-    await user.type(screen.getByLabelText('비밀번호'), 'password123')
-    await user.type(screen.getByLabelText('비밀번호 확인'), 'password123')
+    await user.type(screen.getByLabelText('비밀번호'), 'Password1!')
+    await user.type(screen.getByLabelText('비밀번호 확인'), 'Password1!')
     await user.click(screen.getByRole('button', { name: '회원가입' }))
 
     await waitFor(() => {
       expect(signup).toHaveBeenCalledWith({
         email: 'student@example.com',
-        password: 'password123',
+        password: 'Password1!',
         name: '홍길동',
         nickname: '길동이',
         role: 'STUDENT',
@@ -125,7 +148,7 @@ describe('SignupPage', () => {
 
     expect(login).toHaveBeenCalledWith({
       email: 'student@example.com',
-      password: 'password123',
+      password: 'Password1!',
       role: 'STUDENT',
     })
     expect(localStorage.getItem('access_token')).toBe('signup-login-token')
@@ -140,8 +163,8 @@ describe('SignupPage', () => {
     await user.type(screen.getByLabelText('이름'), '홍길동')
     await user.type(screen.getByLabelText('닉네임'), '길동이')
     await user.type(screen.getByLabelText('이메일'), 'student@example.com')
-    await user.type(screen.getByLabelText('비밀번호'), 'password123')
-    await user.type(screen.getByLabelText('비밀번호 확인'), 'password123')
+    await user.type(screen.getByLabelText('비밀번호'), 'Password1!')
+    await user.type(screen.getByLabelText('비밀번호 확인'), 'Password1!')
     await user.click(screen.getByRole('button', { name: '회원가입' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -182,12 +205,90 @@ describe('SignupPage', () => {
 
     await user.clear(screen.getByLabelText('이메일'))
     await user.type(screen.getByLabelText('이메일'), 'changed@example.com')
+    await user.type(screen.getByLabelText('비밀번호'), 'Password1!')
+    await user.type(screen.getByLabelText('비밀번호 확인'), 'Password1!')
+    await user.click(screen.getByRole('button', { name: '회원가입' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '이메일 인증을 완료해주세요',
+    )
+  })
+
+  test('회원가입 비밀번호 규칙을 검증한다', async () => {
+    const user = userEvent.setup()
+
+    renderWithRouter(<SignupPage />)
+
+    await user.type(screen.getByLabelText('이름'), '홍길동')
+    await user.type(screen.getByLabelText('닉네임'), '길동이')
+    await user.type(screen.getByLabelText('이메일'), 'new@example.com')
     await user.type(screen.getByLabelText('비밀번호'), 'password123')
     await user.type(screen.getByLabelText('비밀번호 확인'), 'password123')
     await user.click(screen.getByRole('button', { name: '회원가입' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      '이메일 인증을 완료해주세요',
+      '비밀번호는 8~20자이며 영문, 숫자, 특수문자(@$!%*#?&)를 포함해야 합니다',
+    )
+    expect(signup).not.toHaveBeenCalled()
+  })
+
+  test('비밀번호 확인 불일치면 가입을 막는다', async () => {
+    const user = userEvent.setup()
+
+    renderWithRouter(<SignupPage />)
+
+    await user.type(screen.getByLabelText('이름'), '홍길동')
+    await user.type(screen.getByLabelText('닉네임'), '길동이')
+    await user.type(screen.getByLabelText('이메일'), 'new@example.com')
+    await user.type(screen.getByLabelText('비밀번호'), 'Password1!')
+    await user.type(screen.getByLabelText('비밀번호 확인'), 'Password2!')
+    await user.click(screen.getByRole('button', { name: '회원가입' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '비밀번호가 일치하지 않습니다.',
+    )
+    expect(signup).not.toHaveBeenCalled()
+  })
+
+  test('이미 사용 중인 이메일이면 인증코드 발송을 막는다', async () => {
+    const user = userEvent.setup()
+    vi.mocked(sendEmailCode).mockRejectedValue(
+      createAxiosError(409, 'EMAIL_ALREADY_EXISTS'),
+    )
+
+    renderWithRouter(<SignupPage />)
+
+    await user.type(screen.getByLabelText('이메일'), 'duplicate@example.com')
+    await user.click(screen.getByRole('button', { name: '인증하기' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '이미 사용 중인 이메일입니다',
+    )
+  })
+
+  test('잘못된 인증코드면 에러 메시지를 보여준다', async () => {
+    const user = userEvent.setup()
+    vi.mocked(sendEmailCode).mockResolvedValue(
+      createAxiosResponse({
+        status: 200,
+        code: 'EMAIL_SEND_SUCCESS',
+        message: '인증 코드가 발송됐습니다.',
+        data: null,
+      }),
+    )
+    vi.mocked(verifyEmailCode).mockRejectedValue(
+      createAxiosError(400, 'INVALID_VERIFY_CODE'),
+    )
+
+    renderWithRouter(<SignupPage />)
+
+    await user.type(screen.getByLabelText('이메일'), 'new@example.com')
+    await user.click(screen.getByRole('button', { name: '인증하기' }))
+    await user.type(screen.getByPlaceholderText('인증코드를 입력하세요'), '000000')
+    await user.click(screen.getByRole('button', { name: '인증코드 확인' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '인증코드가 올바르지 않습니다',
     )
   })
 })

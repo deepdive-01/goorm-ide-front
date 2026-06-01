@@ -3,6 +3,11 @@ import type { FormEvent } from 'react'
 import { Plus, X } from 'lucide-react'
 import Button from '@/components/common/Button/Button'
 import { TEACHER_SPACES_COPY } from '@/content/teacherSpaces'
+import {
+  getCreateWorkspaceErrorMessage,
+  validateWorkspaceDescription,
+  validateWorkspaceName,
+} from '@/lib/workspaceForm'
 import { createWorkspace } from '@/services/workspace'
 
 const INPUT_CLASS =
@@ -58,23 +63,31 @@ function CreateSpaceDialog({ onCreated }: CreateSpaceDialogProps) {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    const trimmedName = name.trim()
-    const trimmedDescription = description.trim()
 
-    if (!trimmedName) return
+    const nameError = validateWorkspaceName(name)
+    if (nameError) {
+      setError(nameError)
+      return
+    }
+
+    const descriptionError = validateWorkspaceDescription(description)
+    if (descriptionError) {
+      setError(descriptionError)
+      return
+    }
 
     setIsLoading(true)
     setError(null)
 
     try {
       await createWorkspace({
-        name: trimmedName,
-        description: trimmedDescription || undefined,
+        name: name.trim(),
+        description: description.trim() || undefined,
       })
       await onCreated()
       handleClose()
-    } catch {
-      setError(TEACHER_SPACES_COPY.createError)
+    } catch (submitError) {
+      setError(getCreateWorkspaceErrorMessage(submitError))
     } finally {
       setIsLoading(false)
     }
@@ -123,13 +136,16 @@ function CreateSpaceDialog({ onCreated }: CreateSpaceDialogProps) {
               </h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
               <label className="text-body1 font-medium text-white">
                 {TEACHER_SPACES_COPY.createNameLabel}
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    setError(null)
+                  }}
                   placeholder={TEACHER_SPACES_COPY.createNamePlaceholder}
                   className={INPUT_CLASS}
                   autoComplete="off"
@@ -142,7 +158,10 @@ function CreateSpaceDialog({ onCreated }: CreateSpaceDialogProps) {
                 <input
                   type="text"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    setDescription(e.target.value)
+                    setError(null)
+                  }}
                   placeholder={TEACHER_SPACES_COPY.createDescriptionPlaceholder}
                   className={INPUT_CLASS}
                 />
@@ -157,7 +176,6 @@ function CreateSpaceDialog({ onCreated }: CreateSpaceDialogProps) {
               <Button
                 type="submit"
                 isLoading={isLoading}
-                disabled={!name.trim()}
                 ariaLabel={TEACHER_SPACES_COPY.createSubmit}
                 {...SUBMIT_BTN}
               >

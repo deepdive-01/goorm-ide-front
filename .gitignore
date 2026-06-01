@@ -25,6 +25,10 @@ EDITOR.md
 *.sw?
 
 .env
+
+# Local notes only — never commit (mentor/Linear/personal docs)
+docs/
+
 *storybook.log
 storybook-static
 .mcp.json

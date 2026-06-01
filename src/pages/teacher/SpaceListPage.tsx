@@ -10,7 +10,9 @@ import { getRoleSpacesPath } from '@/lib/authRoutes'
 
 function SpaceListPage() {
   const { user, isLoading: isUserLoading } = useCurrentUser()
-  const { workspaces, isLoading, refetch } = useWorkspaces()
+  const { workspaces, isLoading, error, refetch } = useWorkspaces({
+    withProblemCounts: true,
+  })
 
   if (isUserLoading) {
     return (
@@ -42,7 +44,13 @@ function SpaceListPage() {
           <CreateSpaceDialog onCreated={refetch} />
         </div>
 
-        {isLoading ? (
+        {error ? (
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-body2 text-red-400" role="alert">
+              {error}
+            </p>
+          </div>
+        ) : isLoading ? (
           <div className="flex flex-1 items-center justify-center">
             <Spinner size="md" color="text-neon-green" />
           </div>
