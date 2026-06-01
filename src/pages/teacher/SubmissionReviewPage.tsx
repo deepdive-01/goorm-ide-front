@@ -95,15 +95,25 @@ function SubmissionReviewContent({
     }
   }, [feedbacks])
 
-  const [overallFeedback, setOverallFeedback] = useState('')
-  const [overallFeedbackId, setOverallFeedbackId] = useState<number | null>(null)
-  const [syncedFeedbacks, setSyncedFeedbacks] = useState(feedbacks)
+  const [overallDraft, setOverallDraft] = useState<{
+    content: string
+    id: number | null
+  } | null>(null)
 
-  if (feedbacks !== syncedFeedbacks) {
-    setSyncedFeedbacks(feedbacks)
-    setOverallFeedback(overallFromFeedbacks.content)
-    setOverallFeedbackId(overallFromFeedbacks.id)
-  }
+  const overallFeedback =
+    overallDraft?.content ??
+    (isFeedbacksLoading ? '' : overallFromFeedbacks.content)
+  const overallFeedbackId = overallDraft?.id ?? overallFromFeedbacks.id
+
+  const handleOverallFeedbackChange = useCallback(
+    (content: string) => {
+      setOverallDraft((previous) => ({
+        content,
+        id: previous?.id ?? overallFromFeedbacks.id,
+      }))
+    },
+    [overallFromFeedbacks.id],
+  )
 
   const [lineSelection, setLineSelection] = useState<TeacherLineSelection | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -305,7 +315,7 @@ function SubmissionReviewContent({
             />
             <TeacherOverallFeedbackPanel
               value={overallFeedback}
-              onChange={setOverallFeedback}
+              onChange={handleOverallFeedbackChange}
             />
           </section>
         </div>

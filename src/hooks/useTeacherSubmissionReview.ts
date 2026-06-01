@@ -124,9 +124,11 @@ export function useSubmissionFeedbacks(submissionId: number) {
   const isEnabled = Number.isFinite(submissionId) && submissionId > 0
 
   const [feedbacks, setFeedbacks] = useState<ReturnType<typeof normalizeFeedbackList>>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [loadedSubmissionId, setLoadedSubmissionId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+
+  const isLoading = loadedSubmissionId !== submissionId
 
   const refetch = useCallback(() => {
     setReloadKey((key) => key + 1)
@@ -140,22 +142,19 @@ export function useSubmissionFeedbacks(submissionId: number) {
     let isMounted = true
 
     const load = async () => {
-      setIsLoading(true)
       setError(null)
 
       try {
         const { data } = await getFeedbacks(submissionId)
         if (isMounted) {
           setFeedbacks(normalizeFeedbackList(data.data))
+          setLoadedSubmissionId(submissionId)
         }
       } catch {
         if (isMounted) {
           setFeedbacks([])
           setError('피드백을 불러오지 못했습니다.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
+          setLoadedSubmissionId(submissionId)
         }
       }
     }
