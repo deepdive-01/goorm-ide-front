@@ -1,18 +1,28 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, Play, Send, Save } from 'lucide-react'
+import { ChevronDown, Play, Save, Send } from 'lucide-react'
 import Button from '@/components/common/Button/Button'
 import type { Language, EditorToolbarProps } from '@/types/editor.type'
 
 const LANGUAGE_DISPLAY: Record<Language, string> = {
-  python: 'Python',
-  java: 'Java',
-  javascript: 'JavaScript',
-  cpp: 'C++',
+  PYTHON: 'Python',
+  JAVA: 'Java',
+  JAVASCRIPT: 'JavaScript',
+  CPP: 'C++',
 }
 
 const LANGUAGES = Object.keys(LANGUAGE_DISPLAY) as Language[]
 
-function EditorToolbar({ language, onLanguageChange, onRun }: EditorToolbarProps) {
+function EditorToolbar({
+  language,
+  onLanguageChange,
+  onRun,
+  onSave,
+  onSubmit,
+  isRunning = false,
+  isSaving = false,
+  isSubmitting = false,
+  disabled = false,
+}: EditorToolbarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -72,14 +82,13 @@ function EditorToolbar({ language, onLanguageChange, onRun }: EditorToolbarProps
         <Button
           ariaLabel="run"
           bgColor="bg-transparent"
-          textClassName="text-body2"
           textColor="text-light-background"
-          className="border border-gray-800"
-          size="md"
+          className="border border-gray-800 px-2!"
+          size="lg"
+          isLoading={isRunning}
           onClick={onRun}
         >
-          <Play size={15} />
-          실행
+          <Play size={16} />
         </Button>
 
         <Button
@@ -87,11 +96,13 @@ function EditorToolbar({ language, onLanguageChange, onRun }: EditorToolbarProps
           bgColor="bg-transparent"
           textClassName="text-body2"
           textColor="text-light-background"
-          className="border border-gray-800"
-          size="md"
+          className="border border-gray-800 px-2!"
+          size="lg"
+          isLoading={isSaving}
+          disabled={disabled}
+          onClick={onSave}
         >
-          <Save size={15} />
-          저장
+          <Save size={16} />
         </Button>
 
         <Button
@@ -100,6 +111,9 @@ function EditorToolbar({ language, onLanguageChange, onRun }: EditorToolbarProps
           textClassName="text-body2"
           textColor="text-background"
           size="md"
+          isLoading={isSubmitting}
+          disabled={disabled}
+          onClick={onSubmit}
         >
           <Send size={15} />
           제출

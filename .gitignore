@@ -13,6 +13,7 @@ dist-ssr
 *.local
 
 # Editor directories and files
+EDITOR.md
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -24,6 +25,10 @@ dist-ssr
 *.sw?
 
 .env
+
+# Local notes only — never commit (mentor/Linear/personal docs)
+docs/
+
 *storybook.log
 storybook-static
 .mcp.json

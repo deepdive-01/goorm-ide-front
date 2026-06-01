@@ -24,7 +24,7 @@ function SpaceCard({ workspace, onClick }: SpaceCardProps) {
   const navigate = useNavigate()
   const Icon = CARD_ICONS[(workspace.id - 1) % CARD_ICONS.length] ?? Code2
   const problemCount = workspace.problem_count ?? 0
-  const lectureCount = workspace.lecture_count ?? problemCount
+  const fileCount = workspace.file_count ?? problemCount
 
   const handleClick = () => {
     if (onClick) {
@@ -65,7 +65,7 @@ function SpaceCard({ workspace, onClick }: SpaceCardProps) {
           </span>
           <span className="inline-flex items-center gap-1.5">
             <FileText className="size-4 shrink-0" aria-hidden />
-            {STUDENT_SPACES_COPY.lectureCount(lectureCount)}
+            {STUDENT_SPACES_COPY.lectureCount(fileCount)}
           </span>
         </div>
       </div>

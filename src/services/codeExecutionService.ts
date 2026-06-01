@@ -1,17 +1,23 @@
 import api from './api'
 import type { ApiResponse } from '@/types/api.type'
-import type { ExecutionResult, Language } from '@/types/editor.type'
+import type { Language, GradeResult } from '@/types/editor.type'
 
-interface ExecuteParams {
-  roomId: number
+interface GradeParams {
+  problemId: number
   language: Language
   code: string
 }
 
-export async function executeCode(params: ExecuteParams): Promise<ExecutionResult> {
-  const response = await api.post<ApiResponse<ExecutionResult>>(
-    '/api/v1/code/execute',
-    params,
+export async function gradeCode(params: GradeParams): Promise<GradeResult> {
+  const body = {
+    problem_id: params.problemId,
+    language: params.language.toLowerCase(),
+    code: params.code,
+  }
+  console.log('[grade] req body:', body)
+  const response = await api.post<ApiResponse<GradeResult>>(
+    '/api/v1/code/grade',
+    body,
   )
   return response.data.data
 }

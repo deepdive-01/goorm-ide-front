@@ -1,4 +1,6 @@
+import { MOCK_TEACHER_SUBMITTED_CODE } from '@/content/teacherSubmissionReview'
 import type { UserRole } from '@/types/api.type'
+import type { TeacherSubmissionReviewDetail } from '@/types/teacherSubmissionReview.type'
 import type { UserInfo } from '@/types/user.type'
 import type { WorkspaceListItem } from '@/types/workspace.type'
 
@@ -158,7 +160,7 @@ export const mockWorkspace = {
   description:
     '파이썬의 기초 문법과 변수, 제어문 등 프로그래밍의 핵심 개념을 익히고, 간단한 알고리즘 문제를 풀며 실력을 다지는 클래스입니다.',
   is_public: false,
-  invite_code: 'ABC12345',
+  invite_code: '152436',
   is_active: true,
   mentor: { id: 2, nickname: '엄성현' },
   member_count: 25,
@@ -176,7 +178,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-11T13:00:00Z',
     mentor_name: '엄성현 강사',
     problem_count: 12,
-    lecture_count: 12,
+    file_count: 12,
   },
   {
     id: 2,
@@ -188,7 +190,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-12T10:00:00Z',
     mentor_name: '안건호 강사',
     problem_count: 20,
-    lecture_count: 15,
+    file_count: 20,
   },
   {
     id: 3,
@@ -200,7 +202,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-13T09:00:00Z',
     mentor_name: '박강사',
     problem_count: 10,
-    lecture_count: 8,
+    file_count: 10,
   },
   {
     id: 4,
@@ -211,7 +213,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-14T09:00:00Z',
     mentor_name: '최강사',
     problem_count: 8,
-    lecture_count: 6,
+    file_count: 8,
   },
   {
     id: 5,
@@ -222,7 +224,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-15T09:00:00Z',
     mentor_name: '이강사',
     problem_count: 15,
-    lecture_count: 10,
+    file_count: 15,
   },
 ]
 
@@ -257,7 +259,7 @@ export function createMockWorkspace(params: {
     created_at: new Date().toISOString(),
     mentor_name: params.mentorName ?? `${mockMentorUser.nickname} 강사`,
     problem_count: 0,
-    lecture_count: 0,
+    file_count: 0,
   }
 
   nextMockWorkspaceId += 1
@@ -514,10 +516,87 @@ export const mockTestCases = [
 ]
 
 export const mockSubmission = {
-  submission_id: 1,
-  student_id: mockUser.id,
-  nickname: mockUser.nickname,
-  status: 'SUBMITTED' as const,
-  submitted_at: '2025-05-11T13:00:00Z',
-  has_feedback: false,
+  submissionId: 1,
+  studentId: 2,
+  nickname: '최학생',
+  status: 'SUCCESS',
+  hasFeedback: false,
 }
+
+// 강사 제출 리뷰 상세 (API 연동 전 목 데이터)
+export const mockTeacherSubmissionReviews: Record<number, TeacherSubmissionReviewDetail> = {
+  1: {
+    submissionId: 1,
+    problemId: 1,
+    studentNickname: '최학생',
+    submittedAt: '2026-05-14T18:00:00Z',
+    code: MOCK_TEACHER_SUBMITTED_CODE,
+    lineComments: [
+      {
+        id: 'teacher-comment-1',
+        startLine: 2,
+        endLine: 2,
+        message: 'map 함수를 사용해 깔끔하게 처리했네요!',
+      },
+    ],
+    overallFeedback: '',
+  },
+  2: {
+    submissionId: 2,
+    problemId: 1,
+    studentNickname: '정학생',
+    submittedAt: '2026-05-06T09:15:00Z',
+    code: MOCK_TEACHER_SUBMITTED_CODE,
+    lineComments: [],
+    overallFeedback: '전반적으로 잘 작성했습니다. 변수명을 조금 더 명확하게 하면 좋겠어요.',
+  },
+}
+
+// 강사 스페이스 제출 목록
+export const mockSubmissionDetail = {
+  id: 1,
+  problem_id: 3,
+  student_id: 1,
+  saved_code: 'a, b = map(int, input().split())\nprint(a + b)',
+  submitted_code: null,
+  status: 'DRAFT',
+  execution_time_ms: null,
+  execution_memory_kb: null,
+  error_message: null,
+  created_at: '2026-06-01T00:00:00Z',
+  updated_at: '2026-06-01T00:00:00Z',
+}
+
+export const mockFileProblemDetail = {
+  problem_id: 3,
+  title: '두 수의 합',
+  description: '두 수를 입력받아 합을 출력하세요.',
+  language: 'PYTHON',
+  starter_code: '# 여기에 코드를 작성하세요',
+  current_code: 'a, b = map(int, input().split())\nprint(a + b)',
+  submitted_code: null,
+  is_final_submitted: false,
+}
+
+export const mockTeacherSpaceSubmissions = [
+  {
+    id: 1,
+    problemId: 1,
+    studentId: 2,
+    studentNickname: '최학생',
+    problemTitle: '두 수의 합',
+    submittedAt: '2026-05-14T18:00:00Z',
+    feedbackStatus: 'PENDING' as const,
+    commentCount: 0,
+  },
+  {
+    id: 2,
+    problemId: 1,
+    studentId: 3,
+    studentNickname: '정학생',
+    problemTitle: '두 수의 합',
+    submittedAt: '2026-05-06T09:15:00Z',
+    feedbackStatus: 'COMPLETED' as const,
+    commentCount: 1,
+  },
+]

@@ -17,6 +17,7 @@ function Button({
   hoverClassName,
   size = 'lg',
   type = 'button',
+  form,
   className = '',
   isLoading = false,
   disabled = false,
@@ -34,6 +35,7 @@ function Button({
   return (
     <button
       type={type}
+      form={form}
       aria-label={ariaLabel}
       aria-busy={isLoading}
       aria-disabled={isDisabled}

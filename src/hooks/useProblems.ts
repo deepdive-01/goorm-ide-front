@@ -16,7 +16,7 @@ export function useProblems(spaceId: number, params?: ProblemListParams): UsePro
     const fetch = async () => {
       try {
         const { data } = await getProblems(spaceId, params)
-        setProblems(data.data.problems)
+        setProblems(Array.isArray(data.data) ? data.data : data.data.problems)
       } catch {
         setProblems([])
       } finally {

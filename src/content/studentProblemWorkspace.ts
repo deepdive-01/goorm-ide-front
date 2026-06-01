@@ -1,8 +1,7 @@
 import type {
-  ProblemCodeCommentItem,
-  ProblemFeedbackItem,
-  SubmittedCodeReviewComment,
-} from '@/types/studentProblemWorkspace.type'
+  StudentCodeCommentItem,
+  StudentSubmissionFeedbackItem,
+} from '@/types/codeFeedback.type'
 
 export const STUDENT_PROBLEM_WORKSPACE_COPY = {
   backToProblems: '문항 목록',
@@ -26,53 +25,38 @@ export const STUDENT_PROBLEM_WORKSPACE_COPY = {
     run: '실행',
     submit: '제출',
   },
-  review: {
-    title: '제출 코드 리뷰',
-    commentCount: (count: number) => `${count}개의 코멘트`,
-    lineLabel: (line: number) => `줄 ${line}`,
-  },
   invalidParams: '문항을 찾을 수 없습니다.',
 } as const
 
 /** MSW·UI 목 데이터 — API 연동 시 교체 */
-const MOCK_TODAY = '2026.05.26'
-
-export const MOCK_PROBLEM_WORKSPACE_FEEDBACK: ProblemFeedbackItem[] = [
+export const MOCK_PROBLEM_WORKSPACE_FEEDBACK: StudentSubmissionFeedbackItem[] = [
   {
     id: 'fb-1',
     authorName: '김강사',
-    createdAt: `${MOCK_TODAY} 14:45`,
-    message:
-      '전체 흐름이 좋습니다. 입력 → 연산 → 출력 순서가 문제 요구사항과 잘 맞아요.',
+    createdAt: '2026-05-14 18:00',
+    message: '잘 작성했습니다! 전체적으로 간결한 코드입니다.',
   },
   {
     id: 'fb-2',
     authorName: '김강사',
-    createdAt: `${MOCK_TODAY} 15:05`,
+    createdAt: '2026-05-14 19:30',
     message:
-      '입력 처리 부분이 특히 깔끔합니다. 한 줄로 받아서 바로 연산하는 방식이 읽기 쉬워요.',
-    codeSnippet: 'a, b = map(int, input().split())',
+      '다음에는 예외 입력(빈 줄, 문자 등)도 한번 고려해 보세요. 전체 구조는 이미 좋습니다.',
   },
 ]
 
-export const MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS: ProblemCodeCommentItem[] = [
+export const MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS: StudentCodeCommentItem[] = [
   {
     id: 'cc-1',
     authorName: '김강사',
-    lineNumber: 4,
-    createdAt: `${MOCK_TODAY} 15:08`,
-    message:
-      '출력까지 잘 연결하셨네요. `print(a + b)`로 결과를 바로 보여주는 방식이 명확합니다.',
-  },
-]
-
-export const MOCK_SUBMITTED_CODE_REVIEW: SubmittedCodeReviewComment[] = [
-  {
     lineNumber: 1,
-    code: 'a, b = map(int, input().split())',
+    message: 'map 함수를 사용해 깔끔하게 처리했네요!',
+  },
+  {
+    id: 'cc-2',
     authorName: '김강사',
-    message:
-      'map 함수를 사용해 깔끔하게 처리했네요! 한 줄로 입력을 처리하는 방식이 아주 효율적입니다.',
+    lineNumber: 2,
+    message: '입력을 한 줄로 파싱하는 방식이 읽기 쉽습니다.',
   },
 ]
 
