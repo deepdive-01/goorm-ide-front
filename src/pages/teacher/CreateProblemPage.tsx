@@ -13,12 +13,19 @@ import {
   TEACHER_CREATE_PROBLEM_COPY,
 } from '@/content/teacherCreateProblem'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useProblem } from '@/hooks/useProblem'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { getRoleSpacesPath } from '@/lib/authRoutes'
+import {
+  getCreateProblemErrorMessage,
+  validateCreateProblemForm,
+} from '@/lib/problemForm'
 import { toEditorLanguage } from '@/lib/problemLanguage'
-import { createProblem } from '@/services/problem'
-import type { Language } from '@/types/api.type'
-import type { CreateTestcase } from '@/types/problem.type'
+import { createProblem, updateProblemWithTestcases } from '@/services/problem'
+import type { Difficulty, Language } from '@/types/api.type'
+import type { CreateTestcase, ProblemDetail } from '@/types/problem.type'
+import type { UserInfo } from '@/types/user.type'
+import type { WorkspaceDetail } from '@/types/workspace.type'
 
 const INPUT_CLASS =
   'text-body1 block h-10 w-full rounded-lg border border-gray-800 bg-[#151515] px-3 font-normal text-light-background placeholder:text-gray-400 focus:border-neon-green focus:outline-none'
@@ -50,31 +57,164 @@ function createTestcaseItem(isHidden = false): TestcaseFormItem {
   }
 }
 
+type ProblemFormInitialValues = {
+  title: string
+  language: Language
+  difficulty: Difficulty
+  description: string
+  starterCode: string
+  isPublished: boolean
+  testcases: TestcaseFormItem[]
+}
+
+function getEmptyFormValues(): ProblemFormInitialValues {
+  return {
+    title: '',
+    language: 'PYTHON',
+    difficulty: 'EASY',
+    description: '',
+    starterCode: DEFAULT_STARTER_CODE.PYTHON,
+    isPublished: false,
+    testcases: [createTestcaseItem(true)],
+  }
+}
+
+function mapProblemToFormValues(problem: ProblemDetail): ProblemFormInitialValues {
+  return {
+    title: problem.title,
+    language: problem.language,
+    difficulty: problem.difficulty,
+    description: problem.description,
+    starterCode: problem.starter_code || DEFAULT_STARTER_CODE[problem.language],
+    isPublished: problem.is_published,
+    testcases:
+      problem.testcases.length > 0
+        ? problem.testcases.map((testcase) => ({
+            localId: crypto.randomUUID(),
+            input: testcase.input,
+            expected_output: testcase.expected_output,
+            is_hidden: testcase.is_hidden,
+          }))
+        : [createTestcaseItem(true)],
+  }
+}
+
 function CreateProblemPage() {
-  const { spaceId: spaceIdParam } = useParams()
+  const { spaceId: spaceIdParam, problemId: problemIdParam } = useParams()
   const spaceId = Number(spaceIdParam)
+  const problemId = problemIdParam ? Number(problemIdParam) : undefined
 
   if (!Number.isFinite(spaceId) || spaceId <= 0) {
     return <Navigate to="/teacher/spaces" replace />
   }
 
-  return <CreateProblemContent spaceId={spaceId} />
+  if (
+    problemIdParam &&
+    (!Number.isFinite(problemId) || !problemId || problemId <= 0)
+  ) {
+    return <Navigate to={`/teacher/spaces/${spaceId}`} replace />
+  }
+
+  return <CreateProblemContent spaceId={spaceId} problemId={problemId} />
 }
 
-function CreateProblemContent({ spaceId }: { spaceId: number }) {
+function CreateProblemContent({
+  spaceId,
+  problemId,
+}: {
+  spaceId: number
+  problemId?: number
+}) {
+  const isEditMode = problemId != null && problemId > 0
+  const { user, isLoading: isUserLoading } = useCurrentUser()
+  const { workspace, isLoading: isWorkspaceLoading } = useWorkspace(spaceId)
+  const { problem, isLoading: isProblemLoading } = useProblem(spaceId, problemId ?? 0)
+
+  const isPageLoading =
+    isUserLoading || isWorkspaceLoading || (isEditMode && isProblemLoading)
+
+  if (isPageLoading) {
+    return (
+      <main className="bg-background flex flex-1 items-center justify-center">
+        <Spinner size="md" color="text-neon-green" />
+      </main>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (user.role !== 'MENTOR') {
+    return <Navigate to={getRoleSpacesPath(user)} replace />
+  }
+
+  if (!workspace) {
+    return (
+      <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
+        <div className="mx-auto w-full max-w-[1104px]">
+          <p className="text-body1 text-center text-gray-400">
+            {TEACHER_CREATE_PROBLEM_COPY.invalidSpace}
+          </p>
+        </div>
+      </main>
+    )
+  }
+
+  if (isEditMode && !problem) {
+    return (
+      <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
+        <div className="mx-auto w-full max-w-[1104px]">
+          <p className="text-body1 text-center text-gray-400">
+            {TEACHER_CREATE_PROBLEM_COPY.problemNotFound}
+          </p>
+        </div>
+      </main>
+    )
+  }
+
+  const initialValues =
+    isEditMode && problem ? mapProblemToFormValues(problem) : getEmptyFormValues()
+
+  return (
+    <ProblemFormEditor
+      key={isEditMode ? `edit-${problemId}` : 'create'}
+      spaceId={spaceId}
+      problemId={problemId}
+      isEditMode={isEditMode}
+      workspace={workspace}
+      user={user}
+      initialValues={initialValues}
+    />
+  )
+}
+
+function ProblemFormEditor({
+  spaceId,
+  problemId,
+  isEditMode,
+  workspace,
+  user,
+  initialValues,
+}: {
+  spaceId: number
+  problemId?: number
+  isEditMode: boolean
+  workspace: WorkspaceDetail
+  user: UserInfo
+  initialValues: ProblemFormInitialValues
+}) {
   const navigate = useNavigate()
   const formId = useId()
   const titleFieldId = useId()
-  const { user, isLoading: isUserLoading } = useCurrentUser()
-  const { workspace, isLoading: isWorkspaceLoading } = useWorkspace(spaceId)
 
-  const [title, setTitle] = useState('')
-  const [language, setLanguage] = useState<Language>('PYTHON')
-  const [description, setDescription] = useState('')
-  const [starterCode, setStarterCode] = useState(DEFAULT_STARTER_CODE.PYTHON)
-  const [testcases, setTestcases] = useState<TestcaseFormItem[]>(() => [
-    createTestcaseItem(true),
-  ])
+  const [title, setTitle] = useState(initialValues.title)
+  const [language, setLanguage] = useState(initialValues.language)
+  const [difficulty] = useState(initialValues.difficulty)
+  const [description, setDescription] = useState(initialValues.description)
+  const [starterCode, setStarterCode] = useState(initialValues.starterCode)
+  const [isPublished] = useState(initialValues.isPublished)
+  const [testcases, setTestcases] = useState(initialValues.testcases)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -106,7 +246,7 @@ function CreateProblemContent({ spaceId }: { spaceId: number }) {
   const handleSubmit = useCallback(
     async (event: FormEvent) => {
       event.preventDefault()
-      if (!title.trim() || isSaving) return
+      if (isSaving) return
 
       const payloadTestcases: CreateTestcase[] = testcases.map((item, index) => ({
         input: item.input,
@@ -115,55 +255,67 @@ function CreateProblemContent({ spaceId }: { spaceId: number }) {
         order_num: index + 1,
       }))
 
+      const validationError = validateCreateProblemForm({
+        title,
+        language,
+        description,
+        testcases: payloadTestcases,
+      })
+
+      if (validationError) {
+        setError(validationError)
+        return
+      }
+
       setIsSaving(true)
       setError(null)
 
       try {
-        await createProblem(spaceId, {
+        const payload = {
           title: title.trim(),
-          description,
-          difficulty: 'EASY',
+          description: description.trim(),
+          difficulty,
           language,
           starter_code: starterCode,
           testcases: payloadTestcases,
-        })
+        }
+
+        if (isEditMode && problemId) {
+          await updateProblemWithTestcases(problemId, {
+            ...payload,
+            is_published: isPublished,
+          })
+        } else {
+          await createProblem(spaceId, user.id, payload)
+        }
+
         navigate(`/teacher/spaces/${spaceId}`)
-      } catch {
-        setError(TEACHER_CREATE_PROBLEM_COPY.saveError)
+      } catch (submitError) {
+        setError(getCreateProblemErrorMessage(submitError))
       } finally {
         setIsSaving(false)
       }
     },
-    [description, isSaving, language, navigate, spaceId, starterCode, testcases, title],
+    [
+      description,
+      difficulty,
+      isEditMode,
+      isPublished,
+      isSaving,
+      language,
+      navigate,
+      problemId,
+      spaceId,
+      starterCode,
+      testcases,
+      title,
+      user,
+    ],
   )
 
-  if (isUserLoading || isWorkspaceLoading) {
-    return (
-      <main className="bg-background flex flex-1 items-center justify-center">
-        <Spinner size="md" color="text-neon-green" />
-      </main>
-    )
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (user.role !== 'MENTOR') {
-    return <Navigate to={getRoleSpacesPath(user)} replace />
-  }
-
-  if (!workspace) {
-    return (
-      <main className="bg-background text-light-background flex flex-1 px-4 py-10 sm:px-16 lg:px-22">
-        <div className="mx-auto w-full max-w-[1104px]">
-          <p className="text-body1 text-center text-gray-400">
-            {TEACHER_CREATE_PROBLEM_COPY.invalidSpace}
-          </p>
-        </div>
-      </main>
-    )
-  }
+  const pageTitle = isEditMode
+    ? TEACHER_CREATE_PROBLEM_COPY.editPageTitle
+    : TEACHER_CREATE_PROBLEM_COPY.pageTitle
 
   return (
     <div className="bg-background text-light-background flex flex-1 flex-col">
@@ -176,20 +328,29 @@ function CreateProblemContent({ spaceId }: { spaceId: number }) {
             >
               {workspace.name}
             </PageHeader>
-            <h1 className="text-head3 text-white">{TEACHER_CREATE_PROBLEM_COPY.pageTitle}</h1>
+            <h1 className="text-head3 text-white">{pageTitle}</h1>
           </div>
 
-          <Button
-            type="submit"
-            form={formId}
-            isLoading={isSaving}
-            disabled={!title.trim()}
-            ariaLabel={TEACHER_CREATE_PROBLEM_COPY.save}
-            {...SAVE_BTN}
-          >
-            <Save className="size-4 shrink-0" aria-hidden />
-            {isSaving ? TEACHER_CREATE_PROBLEM_COPY.saving : TEACHER_CREATE_PROBLEM_COPY.save}
-          </Button>
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+            {error && (
+              <p className="text-body3 max-w-md text-right text-red-400" role="alert">
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              form={formId}
+              isLoading={isSaving}
+              disabled={isSaving}
+              ariaLabel={TEACHER_CREATE_PROBLEM_COPY.save}
+              {...SAVE_BTN}
+            >
+              <Save className="size-4 shrink-0" aria-hidden />
+              {isSaving
+                ? TEACHER_CREATE_PROBLEM_COPY.saving
+                : TEACHER_CREATE_PROBLEM_COPY.save}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -222,7 +383,6 @@ function CreateProblemContent({ spaceId }: { spaceId: number }) {
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder={TEACHER_CREATE_PROBLEM_COPY.titlePlaceholder}
                     className={`${INPUT_CLASS} mt-2.5`}
-                    required
                   />
                 </div>
 
@@ -395,12 +555,6 @@ function CreateProblemContent({ spaceId }: { spaceId: number }) {
               </section>
             </Card>
           </div>
-
-          {error && (
-            <p className="text-body3 text-red-400 lg:col-span-2" role="alert">
-              {error}
-            </p>
-          )}
         </form>
       </main>
     </div>

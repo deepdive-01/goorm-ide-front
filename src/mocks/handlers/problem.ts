@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw'
+import type { CreateProblemRequest } from '@/types/problem.type'
 import {
+  createMockProblem,
   mockProblem,
   mockProblemBank,
   mockProblemList,
@@ -26,24 +28,24 @@ export const problemHandlers = [
     }),
   ),
 
-  http.post('*/api/v1/spaces/:spaceId/problems', () =>
-    HttpResponse.json({
-      status: 201,
-      code: 'PROBLEM_CREATED',
-      message: '문항이 생성됐습니다.',
-      data: {
-        id: mockProblem.id,
-        space_id: mockProblem.space_id,
-        created_by: mockProblem.created_by,
-        problem_bank_id: mockProblem.problem_bank_id,
-        title: mockProblem.title,
-        difficulty: mockProblem.difficulty,
-        language: mockProblem.language,
-        is_published: false,
-        created_at: new Date().toISOString(),
+  http.post('*/api/v1/spaces/:spaceId/problems', async ({ request, params }) => {
+    const body = (await request.json()) as CreateProblemRequest
+    const spaceId = Number(params.spaceId)
+    const created = createMockProblem({
+      ...body,
+      spaceId,
+    })
+
+    return HttpResponse.json(
+      {
+        status: 201,
+        code: 'PROBLEM_CREATED',
+        message: '문항이 생성됐습니다.',
+        data: created,
       },
-    }),
-  ),
+      { status: 201 },
+    )
+  }),
 
   http.get('*/api/v1/spaces/:spaceId/problems', () =>
     HttpResponse.json({
@@ -70,9 +72,7 @@ export const problemHandlers = [
 
   http.get('*/api/v1/spaces/:spaceId/problems/:problemId', ({ params }) => {
     const problemId = Number(params.problemId)
-    const problem =
-      mockProblemsById[problemId as keyof typeof mockProblemsById] ??
-      mockProblem
+    const problem = mockProblemsById[problemId] ?? mockProblem
 
     return HttpResponse.json({
       status: 200,
@@ -84,9 +84,7 @@ export const problemHandlers = [
 
   http.get('*/api/v1/files/problems/:problemId', ({ params }) => {
     const problemId = Number(params.problemId)
-    const problem =
-      mockProblemsById[problemId as keyof typeof mockProblemsById] ??
-      mockProblem
+    const problem = mockProblemsById[problemId] ?? mockProblem
     const { testcases: _testcases, ...problemWithoutTestcases } = problem
 
     return HttpResponse.json({
@@ -99,9 +97,7 @@ export const problemHandlers = [
 
   http.get('*/api/v1/files/problems/:problemId/testcases', ({ params }) => {
     const problemId = Number(params.problemId)
-    const problem =
-      mockProblemsById[problemId as keyof typeof mockProblemsById] ??
-      mockProblem
+    const problem = mockProblemsById[problemId] ?? mockProblem
 
     return HttpResponse.json({
       status: 200,

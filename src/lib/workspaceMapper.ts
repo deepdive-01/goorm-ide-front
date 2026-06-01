@@ -1,4 +1,5 @@
 import type {
+  InviteEmailResponse,
   WorkspaceCreated,
   WorkspaceDetail,
   WorkspaceListItem,
@@ -205,5 +206,24 @@ export function normalizeWorkspaceMembersResponse(
     space_name: readString(record, 'spaceName', 'space_name'),
     member_count: readNumber(record, 'memberCount', 'member_count'),
     members,
+  }
+}
+
+/** API 응답 — Swagger(camelCase)와 snake_case 모두 지원 */
+export function normalizeInviteEmailResponse(value: unknown): InviteEmailResponse {
+  const record = asRecord(value)
+
+  if (!record) {
+    return {
+      space_id: 0,
+      space_name: '',
+      sent_count: 0,
+    }
+  }
+
+  return {
+    space_id: readNumber(record, 'spaceId', 'space_id'),
+    space_name: readString(record, 'spaceName', 'space_name'),
+    sent_count: readNumber(record, 'sentCount', 'sent_count'),
   }
 }
