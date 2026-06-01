@@ -67,7 +67,7 @@ function SubmissionReviewContent({
   const [isSaving, setIsSaving] = useState(false)
 
   const editorLanguage = useMemo(
-    () => (problem ? toEditorLanguage(problem.language) : 'python'),
+    () => (problem ? toEditorLanguage(problem.language) : 'PYTHON'),
     [problem],
   )
 

@@ -2,7 +2,14 @@ import { useState, useEffect, useRef } from 'react'
 import { useCurrentUser } from './useCurrentUser'
 import { useCodeExecution } from './useCodeExecution'
 import { gradeCode } from '@/services/codeExecutionService'
-import { getSubmission, updateSubmission, submitCode } from '@/services/file'
+import { canCancelSubmission } from '@/lib/apiMapper'
+import {
+  deleteSubmission,
+  getSubmission,
+  submitCode,
+  updateSubmission,
+} from '@/services/file'
+import type { SubmissionDetail } from '@/types/file.type'
 import type {
   Language,
   GradeResult,
@@ -23,6 +30,8 @@ interface UseEditorPageResult {
   isReady: boolean
   isSaving: boolean
   isSubmitting: boolean
+  isCancelling: boolean
+  canCancelSubmit: boolean
   gradeResult: GradeResult | null
   executionResult: ExecutionResult | null
   isRunning: boolean
@@ -31,6 +40,7 @@ interface UseEditorPageResult {
   handleRun: (stdin: string) => void
   handleSave: () => Promise<void>
   handleSubmit: () => Promise<void>
+  handleCancelSubmit: () => Promise<void>
 }
 
 export function useEditorPage({
@@ -49,9 +59,13 @@ export function useEditorPage({
   // problemId 또는 user가 바뀌면 currentKey가 달라져 isReady가 자동으로 false가 됩니다.
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
 
+  const [submission, setSubmission] = useState<SubmissionDetail | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
   const [gradeResult, setGradeResult] = useState<GradeResult | null>(null)
+
+  const canCancelSubmit = canCancelSubmission(submission)
 
   const { run, isRunning, executionResult } = useCodeExecution({ roomId })
 
@@ -64,18 +78,42 @@ export function useEditorPage({
   const currentKey = user ? `${problemId}-${user.id}` : null
   const isReady = loadedKey !== null && loadedKey === currentKey
 
+  const applySubmissionDetail = (detail: SubmissionDetail) => {
+    setSubmission(detail)
+    setValue(detail.saved_code ?? detail.submitted_code ?? '')
+  }
+
+  const refreshSubmission = async () => {
+    if (!user) return
+    const { data } = await getSubmission(problemId, user.id)
+    applySubmissionDetail(data.data)
+  }
+
   // 문제 ID나 사용자가 바뀔 때마다 해당 제출 정보를 불러와 에디터 초기값을 설정합니다.
   useEffect(() => {
     if (!user) return
     const key = `${problemId}-${user.id}`
+    let cancelled = false
+
     getSubmission(problemId, user.id)
       .then(({ data }) => {
-        const detail = data.data
-        // 임시저장 코드 우선, 없으면 제출 코드, 둘 다 없으면 빈 문자열
-        setValue(detail.saved_code ?? detail.submitted_code ?? '')
+        if (cancelled) return
+        applySubmissionDetail(data.data)
       })
-      .catch(() => {})
-      .finally(() => setLoadedKey(key))
+      .catch(() => {
+        if (!cancelled) {
+          setSubmission(null)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadedKey(key)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [problemId, user])
 
   // 실행 결과가 SUCCESS일 때만 자동 채점합니다.
@@ -137,10 +175,24 @@ export function useEditorPage({
         submitted_code: value,
         is_final_submit: true,
       })
+      await refreshSubmission()
     } catch (e: unknown) {
       console.error('[submit] 응답 오류:', e)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleCancelSubmit = async () => {
+    if (!user || !canCancelSubmit) return
+    setIsCancelling(true)
+    try {
+      await deleteSubmission(problemId, user.id)
+      await refreshSubmission()
+    } catch (e: unknown) {
+      console.error('[cancel submit] 응답 오류:', e)
+    } finally {
+      setIsCancelling(false)
     }
   }
 
@@ -152,6 +204,8 @@ export function useEditorPage({
     isReady,
     isSaving,
     isSubmitting,
+    isCancelling,
+    canCancelSubmit,
     gradeResult: displayGradeResult,
     executionResult,
     isRunning,
@@ -160,5 +214,6 @@ export function useEditorPage({
     handleRun,
     handleSave,
     handleSubmit,
+    handleCancelSubmit,
   }
 }

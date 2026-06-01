@@ -1,3 +1,4 @@
+import { normalizeSubmissionDetail } from '@/lib/apiMapper'
 import api from './api'
 import type { ApiResponse } from '@/types/api.type'
 import type {
@@ -35,10 +36,19 @@ export const deleteFileProblem = (problemId: number) =>
 export const submitCode = (body: SubmitCodeRequest) =>
   api.post<ApiResponse<null>>('/api/v1/files/submissions', body)
 
-export const getSubmission = (problemId: number, userId: number) =>
-  api.get<ApiResponse<SubmissionDetail>>(
+export const getSubmission = async (problemId: number, userId: number) => {
+  const response = await api.get<ApiResponse<SubmissionDetail>>(
     `/api/v1/files/submissions/${problemId}/${userId}`,
   )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeSubmissionDetail(response.data.data),
+    },
+  }
+}
 
 export const updateSubmission = (
   problemId: number,

@@ -435,7 +435,7 @@ function ProblemFormEditor({
 
                 <div className="overflow-hidden rounded-lg border border-gray-800 bg-gray-900">
                   <CodeEditor
-                    code={starterCode}
+                    value={starterCode}
                     language={toEditorLanguage(language)}
                     height="180px"
                     onChange={setStarterCode}

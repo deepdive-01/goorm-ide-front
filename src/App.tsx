@@ -11,7 +11,6 @@ import LandingPage from '@/pages/LandingPage'
 import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 import Student from '@/routes/Student'
 import Teacher from '@/routes/Teacher'
-import EditorExample from './pages/EditorExample'
 import { shouldShowFooter } from '@/lib/footerVisibility'
 
 function AppShell() {
@@ -48,11 +47,6 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         <Route path="/oauth/signup" element={<AdditionalInfoPage />} />
-        {/* 에디터 컴포넌트 연결 예시이므로 연결하시고 지우시면 됩니다! */}
-        <Route
-          path="/editorExample/:problemId/:roomId"
-          element={<EditorExample />}
-        />
 
         <Route path="/*" element={<AppShell />} />
       </Routes>
