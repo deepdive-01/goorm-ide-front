@@ -37,8 +37,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // RT 쿠키 전송은 프로덕션에서만 필요 — 개발 중 MSW 사용 시 CORS preflight 방지
-  withCredentials: import.meta.env.VITE_MSW_ENABLED !== 'true',
+  withCredentials: false,
 })
 
 api.interceptors.request.use((config) => {

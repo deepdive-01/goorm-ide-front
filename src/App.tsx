@@ -48,7 +48,11 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         <Route path="/oauth/signup" element={<AdditionalInfoPage />} />
-        <Route path="/editorExample" element={<EditorExample />} />
+        {/* 에디터 컴포넌트 연결 예시이므로 연결하시고 지우시면 됩니다! */}
+        <Route
+          path="/editorExample/:problemId/:roomId"
+          element={<EditorExample />}
+        />
 
         <Route path="/*" element={<AppShell />} />
       </Routes>
