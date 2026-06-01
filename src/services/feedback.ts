@@ -1,29 +1,81 @@
+import type { AxiosResponse } from 'axios'
+import { normalizeFeedbackItem, normalizeFeedbackList } from '@/lib/feedbackMapper'
 import api from './api'
 import type { ApiResponse } from '@/types/api.type'
 import type {
   CreateCommentRequest,
-  FeedbackCreated,
   CreateHighlightRequest,
   FeedbackItem,
   UpdateFeedbackRequest,
 } from '@/types/feedback.type'
 
-export const createComment = (body: CreateCommentRequest) =>
-  api.post<ApiResponse<FeedbackCreated>>('/api/v1/feedback/comments', body)
+type FeedbackResponse = AxiosResponse<ApiResponse<FeedbackItem>>
+type FeedbackListResponse = AxiosResponse<ApiResponse<FeedbackItem[]>>
 
-export const createHighlight = (body: CreateHighlightRequest) =>
-  api.post<ApiResponse<FeedbackCreated>>('/api/v1/feedback/highlights', body)
+export const createComment = async (
+  body: CreateCommentRequest,
+): Promise<FeedbackResponse> => {
+  const response = await api.post<ApiResponse<unknown>>('/api/v1/feedback/comments', body)
 
-export const getFeedbacks = (submissionId: number) =>
-  api.get<ApiResponse<FeedbackItem[]>>('/api/v1/feedback', {
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeFeedbackItem(response.data.data),
+    },
+  }
+}
+
+export const createHighlight = async (
+  body: CreateHighlightRequest,
+): Promise<FeedbackResponse> => {
+  const response = await api.post<ApiResponse<unknown>>(
+    '/api/v1/feedback/highlights',
+    body,
+  )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeFeedbackItem(response.data.data),
+    },
+  }
+}
+
+export const getFeedbacks = async (
+  submissionId: number,
+): Promise<FeedbackListResponse> => {
+  const response = await api.get<ApiResponse<unknown>>('/api/v1/feedback', {
     params: { submission_id: submissionId },
   })
 
-export const updateFeedback = (
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeFeedbackList(response.data.data),
+    },
+  }
+}
+
+export const updateFeedback = async (
   feedbackId: number,
   body: UpdateFeedbackRequest,
-) =>
-  api.put<ApiResponse<FeedbackCreated>>(`/api/v1/feedback/${feedbackId}`, body)
+): Promise<FeedbackResponse> => {
+  const response = await api.put<ApiResponse<unknown>>(
+    `/api/v1/feedback/${feedbackId}`,
+    body,
+  )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeFeedbackItem(response.data.data),
+    },
+  }
+}
 
 export const deleteFeedback = (feedbackId: number) =>
   api.delete<ApiResponse<null>>(`/api/v1/feedback/${feedbackId}`)

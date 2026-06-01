@@ -10,16 +10,18 @@ import ProblemWorkspaceSubHeader from '@/components/student/problemWorkspace/Pro
 import ProblemWorkspaceTabs from '@/components/student/problemWorkspace/ProblemWorkspaceTabs'
 import {
   DEFAULT_STUDENT_WORKSPACE_CODE,
-  MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS,
-  MOCK_PROBLEM_WORKSPACE_FEEDBACK,
   STUDENT_PROBLEM_WORKSPACE_COPY,
 } from '@/content/studentProblemWorkspace'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useEditorPage } from '@/hooks/useEditorPage'
+import { useStudentSubmissionFeedbacks } from '@/hooks/useStudentSubmissionFeedbacks'
 import { useProblem } from '@/hooks/useProblem'
 import { useWorkspace } from '@/hooks/useWorkspace'
-import { toEditorLanguage } from '@/lib/problemLanguage'
 import type { ProblemDetail } from '@/types/problem.type'
+import type {
+  StudentCodeCommentItem,
+  StudentSubmissionFeedbackItem,
+} from '@/types/codeFeedback.type'
 import type { ProblemWorkspaceTab } from '@/types/studentProblemWorkspace.type'
 import type { WorkspaceDetail } from '@/types/workspace.type'
 
@@ -53,6 +55,14 @@ function ProblemWorkspaceContent({
 
   const isLoading = isUserLoading || isWorkspaceLoading || isProblemLoading
 
+  const {
+    submissionFeedback,
+    codeComments,
+    reviewCode,
+    isLoading: isFeedbacksLoading,
+    error: feedbacksError,
+  } = useStudentSubmissionFeedbacks(problemId, user?.id ?? 0)
+
   const tabs = useMemo(
     () => [
       {
@@ -62,15 +72,15 @@ function ProblemWorkspaceContent({
       {
         id: 'feedback' as const,
         label: STUDENT_PROBLEM_WORKSPACE_COPY.tabs.feedback,
-        count: MOCK_PROBLEM_WORKSPACE_FEEDBACK.length,
+        count: submissionFeedback.length,
       },
       {
         id: 'codeComments' as const,
         label: STUDENT_PROBLEM_WORKSPACE_COPY.tabs.codeComments,
-        count: MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS.length,
+        count: codeComments.length,
       },
     ],
-    [],
+    [submissionFeedback.length, codeComments.length],
   )
 
   if (isUserLoading) {
@@ -110,6 +120,11 @@ function ProblemWorkspaceContent({
       problem={problem}
       workspace={workspace}
       tabs={tabs}
+      submissionFeedback={submissionFeedback}
+      codeComments={codeComments}
+      reviewCode={reviewCode}
+      isFeedbacksLoading={isFeedbacksLoading}
+      feedbacksError={feedbacksError}
     />
   )
 }
@@ -119,6 +134,11 @@ function ProblemWorkspaceLoaded({
   problem,
   workspace,
   tabs,
+  submissionFeedback,
+  codeComments,
+  reviewCode,
+  isFeedbacksLoading,
+  feedbacksError,
 }: {
   spaceId: number
   problem: ProblemDetail
@@ -128,11 +148,17 @@ function ProblemWorkspaceLoaded({
     label: string
     count?: number
   }[]
+  submissionFeedback: StudentSubmissionFeedbackItem[]
+  codeComments: StudentCodeCommentItem[]
+  reviewCode: string
+  isFeedbacksLoading: boolean
+  feedbacksError: string | null
 }) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<ProblemWorkspaceTab>('description')
 
-  const snippetCode = problem.starter_code || DEFAULT_STUDENT_WORKSPACE_CODE
+  const snippetCode =
+    reviewCode || problem.starter_code || DEFAULT_STUDENT_WORKSPACE_CODE
   const problemsPath = `/student/spaces/${spaceId}/problems`
 
   return (
@@ -161,14 +187,42 @@ function ProblemWorkspaceLoaded({
                 <ProblemDescriptionTab problem={problem} />
               )}
               {activeTab === 'feedback' && (
-                <ProblemFeedbackTab items={MOCK_PROBLEM_WORKSPACE_FEEDBACK} />
+                <>
+                  {isFeedbacksLoading && (
+                    <div className="flex justify-center py-12">
+                      <Spinner size="md" color="text-neon-green" />
+                    </div>
+                  )}
+                  {!isFeedbacksLoading && feedbacksError && (
+                    <p className="text-body2 py-12 text-center text-gray-500">
+                      {feedbacksError}
+                    </p>
+                  )}
+                  {!isFeedbacksLoading && !feedbacksError && (
+                    <ProblemFeedbackTab items={submissionFeedback} />
+                  )}
+                </>
               )}
               {activeTab === 'codeComments' && (
-                <ProblemCodeCommentsTab
-                  items={MOCK_PROBLEM_WORKSPACE_CODE_COMMENTS}
-                  code={snippetCode}
-                  language={toEditorLanguage(problem.language)}
-                />
+                <>
+                  {isFeedbacksLoading && (
+                    <div className="flex justify-center py-12">
+                      <Spinner size="md" color="text-neon-green" />
+                    </div>
+                  )}
+                  {!isFeedbacksLoading && feedbacksError && (
+                    <p className="text-body2 py-12 text-center text-gray-500">
+                      {feedbacksError}
+                    </p>
+                  )}
+                  {!isFeedbacksLoading && !feedbacksError && (
+                    <ProblemCodeCommentsTab
+                      items={codeComments}
+                      code={snippetCode}
+                      language={problem.language}
+                    />
+                  )}
+                </>
               )}
             </Card>
           </section>
