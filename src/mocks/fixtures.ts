@@ -178,7 +178,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-11T13:00:00Z',
     mentor_name: '엄성현 강사',
     problem_count: 12,
-    lecture_count: 12,
+    file_count: 12,
   },
   {
     id: 2,
@@ -190,7 +190,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-12T10:00:00Z',
     mentor_name: '안건호 강사',
     problem_count: 20,
-    lecture_count: 15,
+    file_count: 20,
   },
   {
     id: 3,
@@ -202,7 +202,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-13T09:00:00Z',
     mentor_name: '박강사',
     problem_count: 10,
-    lecture_count: 8,
+    file_count: 10,
   },
   {
     id: 4,
@@ -213,7 +213,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-14T09:00:00Z',
     mentor_name: '최강사',
     problem_count: 8,
-    lecture_count: 6,
+    file_count: 8,
   },
   {
     id: 5,
@@ -224,7 +224,7 @@ const INITIAL_MOCK_WORKSPACE_LIST: WorkspaceListItem[] = [
     created_at: '2025-05-15T09:00:00Z',
     mentor_name: '이강사',
     problem_count: 15,
-    lecture_count: 10,
+    file_count: 15,
   },
 ]
 
@@ -259,7 +259,7 @@ export function createMockWorkspace(params: {
     created_at: new Date().toISOString(),
     mentor_name: params.mentorName ?? `${mockMentorUser.nickname} 강사`,
     problem_count: 0,
-    lecture_count: 0,
+    file_count: 0,
   }
 
   nextMockWorkspaceId += 1
@@ -516,12 +516,11 @@ export const mockTestCases = [
 ]
 
 export const mockSubmission = {
-  submission_id: 1,
-  student_id: mockUser.id,
-  nickname: mockUser.nickname,
-  status: 'SUBMITTED' as const,
-  submitted_at: '2025-05-11T13:00:00Z',
-  has_feedback: false,
+  submissionId: 1,
+  studentId: 2,
+  nickname: '최학생',
+  status: 'SUCCESS',
+  hasFeedback: false,
 }
 
 // 강사 제출 리뷰 상세 (API 연동 전 목 데이터)
@@ -557,14 +556,18 @@ export const mockTeacherSubmissionReviews: Record<number, TeacherSubmissionRevie
 export const mockTeacherSpaceSubmissions = [
   {
     id: 1,
+    problemId: 1,
+    studentId: 2,
     studentNickname: '최학생',
     problemTitle: '두 수의 합',
     submittedAt: '2026-05-14T18:00:00Z',
     feedbackStatus: 'PENDING' as const,
-    commentCount: 1,
+    commentCount: 0,
   },
   {
     id: 2,
+    problemId: 1,
+    studentId: 3,
     studentNickname: '정학생',
     problemTitle: '두 수의 합',
     submittedAt: '2026-05-06T09:15:00Z',

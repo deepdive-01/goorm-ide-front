@@ -32,14 +32,24 @@ export const feedbackHandlers = [
     }),
   ),
 
-  http.get('*/api/v1/feedback', () =>
-    HttpResponse.json({
+  http.get('*/api/v1/feedback', ({ request }) => {
+    const url = new URL(request.url)
+    const submissionId = Number(url.searchParams.get('submission_id'))
+
+    const data =
+      submissionId === 2
+        ? [mockFeedback]
+        : submissionId === 1
+          ? []
+          : [mockFeedback]
+
+    return HttpResponse.json({
       status: 200,
       code: 'FEEDBACK_LIST_SUCCESS',
       message: '피드백 목록을 조회했습니다.',
-      data: [mockFeedback],
-    }),
-  ),
+      data,
+    })
+  }),
 
   http.put('*/api/v1/feedback/:feedbackId', () =>
     HttpResponse.json({

@@ -8,7 +8,7 @@ interface UseSubmissionsResult {
 }
 
 export function useSubmissions(
-  questionsId: number,
+  problemId: number,
   params?: SubmissionListParams,
 ): UseSubmissionsResult {
   const [submissions, setSubmissions] = useState<SubmissionItem[]>([])
@@ -18,7 +18,7 @@ export function useSubmissions(
   useEffect(() => {
     const fetch = async () => {
       try {
-        const { data } = await getSubmissions(questionsId, params)
+        const { data } = await getSubmissions(problemId, params)
         setSubmissions(data.data.submissions)
       } catch {
         setSubmissions([])
@@ -28,7 +28,7 @@ export function useSubmissions(
     }
 
     fetch()
-  }, [questionsId, paramsKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [problemId, paramsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { submissions, isLoading }
 }

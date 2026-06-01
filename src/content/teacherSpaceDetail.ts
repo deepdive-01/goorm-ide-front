@@ -15,9 +15,10 @@ export const TEACHER_SPACE_DETAIL_COPY = {
   feedbackCompleted: '피드백 완료',
   commentCount: (count: number) => `댓글 ${count}`,
   emptyTitle: '등록된 문항이 없습니다',
-  emptyDescription: '문항 생성 기능이 연결되면 이곳에서 목록을 확인할 수 있습니다.',
+  emptyDescription: '문항 생성 버튼으로 첫 문항을 추가해 보세요.',
   emptySubmissionsTitle: '제출된 과제가 없습니다',
   emptySubmissionsDescription: '학습자가 문항을 제출하면 이곳에서 확인할 수 있습니다.',
+  submissionTimeUnknown: '제출 시간 미제공',
   testcaseCount: (count: number) => `테스트 케이스 ${count}개`,
   copyInviteCodeLabel: '스페이스 초대 코드를 복사합니다.',
 } as const

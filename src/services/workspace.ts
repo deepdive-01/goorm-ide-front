@@ -1,43 +1,126 @@
+import {
+  normalizeWorkspaceCreated,
+  normalizeWorkspaceDetail,
+  normalizeWorkspaceList,
+  normalizeWorkspaceMembersResponse,
+  normalizeWorkspaceUpdated,
+} from '@/lib/workspaceMapper'
 import api from './api'
 import type { ApiResponse } from '@/types/api.type'
 import type {
   CreateWorkspaceRequest,
-  WorkspaceCreated,
   WorkspaceListItem,
-  WorkspaceDetail,
   UpdateWorkspaceRequest,
-  WorkspaceUpdated,
   JoinWorkspaceRequest,
   JoinWorkspaceResponse,
-  WorkspaceMembersResponse,
   InviteEmailRequest,
   InviteEmailResponse,
 } from '@/types/workspace.type'
 
-export const createWorkspace = (body: CreateWorkspaceRequest) =>
-  api.post<ApiResponse<WorkspaceCreated>>('/api/v1/spaces', body)
+export const createWorkspace = async (body: CreateWorkspaceRequest) => {
+  const response = await api.post<ApiResponse<unknown>>('/api/v1/spaces', body)
 
-export const getWorkspaces = () =>
-  api.get<ApiResponse<WorkspaceListItem[]>>('/api/v1/spaces')
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeWorkspaceCreated(response.data.data),
+    },
+  }
+}
 
-export const getWorkspace = (spaceId: number) =>
-  api.get<ApiResponse<WorkspaceDetail>>(`/api/v1/spaces/${spaceId}`)
+export const getWorkspaces = async () => {
+  const response = await api.get<ApiResponse<unknown>>('/api/v1/spaces')
 
-export const updateWorkspace = (
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeWorkspaceList(response.data.data),
+    },
+  }
+}
+
+export const getWorkspace = async (spaceId: number) => {
+  const response = await api.get<ApiResponse<unknown>>(`/api/v1/spaces/${spaceId}`)
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeWorkspaceDetail(response.data.data),
+    },
+  }
+}
+
+export const updateWorkspace = async (
   spaceId: number,
   body: UpdateWorkspaceRequest,
-) => api.patch<ApiResponse<WorkspaceUpdated>>(`/api/v1/spaces/${spaceId}`, body)
+) => {
+  const response = await api.patch<ApiResponse<unknown>>(
+    `/api/v1/spaces/${spaceId}`,
+    body,
+  )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeWorkspaceUpdated(response.data.data),
+    },
+  }
+}
 
 export const joinWorkspace = (body: JoinWorkspaceRequest) =>
   api.post<ApiResponse<JoinWorkspaceResponse>>('/api/v1/spaces/join', body)
 
-export const getWorkspaceMembers = (spaceId: number) =>
-  api.get<ApiResponse<WorkspaceMembersResponse>>(
+export const getWorkspaceMembers = async (spaceId: number) => {
+  const response = await api.get<ApiResponse<unknown>>(
     `/api/v1/spaces/${spaceId}/members`,
   )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeWorkspaceMembersResponse(response.data.data),
+    },
+  }
+}
 
 export const inviteByEmail = (spaceId: number, body: InviteEmailRequest) =>
   api.post<ApiResponse<InviteEmailResponse>>(
     `/api/v1/spaces/${spaceId}/invite/email`,
     body,
   )
+
+export async function enrichWorkspacesWithProblemCounts(
+  workspaces: WorkspaceListItem[],
+): Promise<WorkspaceListItem[]> {
+  if (workspaces.length === 0) {
+    return []
+  }
+
+  const { getProblems } = await import('./problem')
+
+  return Promise.all(
+    workspaces.map(async (workspace) => {
+      try {
+        const { data } = await getProblems(workspace.id)
+        const problems = Array.isArray(data.data) ? data.data : []
+
+        return {
+          ...workspace,
+          problem_count: problems.length,
+          file_count: problems.length,
+        }
+      } catch {
+        return {
+          ...workspace,
+          problem_count: workspace.problem_count ?? 0,
+          file_count: workspace.problem_count ?? 0,
+        }
+      }
+    }),
+  )
+}
