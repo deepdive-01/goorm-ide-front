@@ -17,8 +17,14 @@ export interface CreateCustomProblemRequest {
 }
 
 export interface FileProblemDetail {
-  problemId: number
-  [key: string]: unknown
+  problem_id: number
+  title: string
+  description: string
+  language: string
+  starter_code: string
+  current_code: string
+  submitted_code: string | null
+  is_final_submitted: boolean
 }
 
 export interface UpdateCodeRequest {
@@ -33,7 +39,31 @@ export interface UpdateFileProblemRequest {
 }
 
 export interface SubmitCodeRequest {
-  submitted_code: string
+  problem_id: number
+  student_id: number
+  saved_code?: string
+  submitted_code?: string
+  is_final_submit: boolean
+}
+
+export interface SubmissionDetail {
+  id: number
+  problem_id: number
+  student_id: number
+  saved_code: string | null
+  submitted_code: string | null
+  status: string
+  execution_time_ms: number | null
+  execution_memory_kb: number | null
+  error_message: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface UpdateSubmissionRequest {
+  problem_id: number
+  student_id: number
+  saved_code: string
 }
 
 export interface AddTestcaseRequest {

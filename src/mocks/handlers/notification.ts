@@ -2,24 +2,32 @@ import { http, HttpResponse } from 'msw'
 import { mockNotification, mockNotifications } from '../fixtures'
 
 export const notificationHandlers = [
-  http.get('*/api/v1/notification', () =>
-    HttpResponse.json({
+  http.get('*/api/v1/notification', ({ request }) => {
+    const url = new URL(request.url)
+    const isRead = url.searchParams.get('isRead')
+    const filtered =
+      isRead === null
+        ? mockNotifications
+        : mockNotifications.filter((n) => n.isRead === (isRead === 'true'))
+    return HttpResponse.json({
       status: 200,
       code: 'SUCCESS',
       message: '알림 목록을 조회했습니다.',
       data: {
-        notifications: mockNotifications,
+        notifications: filtered,
         page: 0,
         size: 20,
         totalCount: mockNotifications.length,
         unreadCount: mockNotifications.filter((n) => !n.isRead).length,
       },
-    }),
-  ),
+    })
+  }),
 
   http.patch('*/api/v1/notification/read-all', () => {
     const updatedCount = mockNotifications.filter((n) => !n.isRead).length
-    mockNotifications.forEach((n) => { n.isRead = true })
+    mockNotifications.forEach((n) => {
+      n.isRead = true
+    })
     return HttpResponse.json({
       status: 200,
       code: 'NOTIFICATION_ALL_READ_SUCCESS',
@@ -29,7 +37,9 @@ export const notificationHandlers = [
   }),
 
   http.patch('*/api/v1/notification/:id/read', ({ params }) => {
-    const notification = mockNotifications.find((n) => n.id === Number(params.id))
+    const notification = mockNotifications.find(
+      (n) => n.id === Number(params.id),
+    )
     if (notification) notification.isRead = true
     return HttpResponse.json({
       status: 200,

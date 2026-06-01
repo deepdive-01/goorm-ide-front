@@ -17,26 +17,27 @@ function defineGoormTheme(monaco: Monaco) {
 }
 
 const MONACO_LANGUAGE_MAP: Record<Language, string> = {
-  python: 'python',
-  java: 'java',
-  javascript: 'javascript',
-  cpp: 'cpp',
+  PYTHON: 'python',
+  JAVA: 'java',
+  JAVASCRIPT: 'javascript',
+  CPP: 'cpp',
 }
 
 function CodeEditor({
-  code,
+  value,
   language,
   height = '100%',
   onChange,
+  readOnly = false,
 }: CodeEditorProps) {
   return (
     <MonacoEditor
       height={height}
       theme="goorm-dark"
       language={MONACO_LANGUAGE_MAP[language]}
-      value={code}
+      value={value}
       beforeMount={defineGoormTheme}
-      onChange={(value) => onChange(value ?? '')}
+      onChange={(v) => onChange(v ?? '')}
       options={{
         fontSize: 14,
         fontFamily: 'monospace',
@@ -47,6 +48,7 @@ function CodeEditor({
         automaticLayout: true,
         tabSize: 2,
         padding: { top: 16 },
+        readOnly,
       }}
     />
   )

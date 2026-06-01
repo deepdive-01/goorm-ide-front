@@ -4,9 +4,10 @@ export type NotificationType =
   | 'WORKSPACE_INVITED'
 
 export interface NotificationListParams {
+  isRead?: boolean
   page?: number
   size?: number
-  is_read?: boolean
+  sort?: string[]
 }
 
 export interface NotificationItem {

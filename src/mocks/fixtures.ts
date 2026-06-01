@@ -523,6 +523,31 @@ export const mockSubmission = {
 }
 
 // 강사 스페이스 제출 목록
+export const mockSubmissionDetail = {
+  id: 1,
+  problem_id: 3,
+  student_id: 1,
+  saved_code: 'a, b = map(int, input().split())\nprint(a + b)',
+  submitted_code: null,
+  status: 'DRAFT',
+  execution_time_ms: null,
+  execution_memory_kb: null,
+  error_message: null,
+  created_at: '2026-06-01T00:00:00Z',
+  updated_at: '2026-06-01T00:00:00Z',
+}
+
+export const mockFileProblemDetail = {
+  problem_id: 3,
+  title: '두 수의 합',
+  description: '두 수를 입력받아 합을 출력하세요.',
+  language: 'PYTHON',
+  starter_code: '# 여기에 코드를 작성하세요',
+  current_code: 'a, b = map(int, input().split())\nprint(a + b)',
+  submitted_code: null,
+  is_final_submitted: false,
+}
+
 export const mockTeacherSpaceSubmissions = [
   {
     id: 1,
