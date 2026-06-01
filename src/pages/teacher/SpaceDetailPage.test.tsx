@@ -110,6 +110,25 @@ describe('SpaceDetailPage', () => {
     expect(screen.getByText('테스트 케이스 4개')).toBeInTheDocument()
   })
 
+  test('수정 버튼을 누르면 문항 수정 페이지로 이동한다', async () => {
+    const user = userEvent.setup()
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/teacher/spaces/:spaceId" element={<SpaceDetailPage />} />
+        <Route
+          path="/teacher/spaces/:spaceId/problems/:problemId/edit"
+          element={<div>문항 수정</div>}
+        />
+      </Routes>,
+      { route: '/teacher/spaces/1' },
+    )
+
+    await user.click(screen.getAllByRole('button', { name: '수정' })[0])
+
+    expect(screen.getByText('문항 수정')).toBeInTheDocument()
+  })
+
   test('제출 현황 탭으로 전환하면 학습자 제출 목록을 표시한다', async () => {
     const user = userEvent.setup()
 

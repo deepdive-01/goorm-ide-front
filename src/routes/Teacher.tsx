@@ -15,6 +15,10 @@ const Teacher = () => {
         element={<SubmissionReviewPage />}
       />
       <Route path="spaces/:spaceId/problems-create" element={<CreateProblemPage />} />
+      <Route
+        path="spaces/:spaceId/problems/:problemId/edit"
+        element={<CreateProblemPage />}
+      />
       <Route path="spaces/:spaceId/invite" element={<InviteStudentsPage />} />
     </Routes>
   )

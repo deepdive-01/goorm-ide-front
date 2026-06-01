@@ -51,6 +51,7 @@ describe('InviteStudentsPage', () => {
         created_at: '2025-05-11T13:00:00Z',
       },
       isLoading: false,
+      error: null,
     })
   })
 
@@ -68,6 +69,20 @@ describe('InviteStudentsPage', () => {
     expect(screen.getByRole('button', { name: '초대 보내기' })).toBeDisabled()
   })
 
+  test('빈 이메일 추가 시 안내 메시지를 표시한다', async () => {
+    const user = userEvent.setup()
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/teacher/spaces/:spaceId/invite" element={<InviteStudentsPage />} />
+      </Routes>,
+      { route: '/teacher/spaces/1/invite' },
+    )
+
+    await user.click(screen.getByRole('button', { name: '추가' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('이메일을 입력해주세요')
+  })
+
   test('이메일을 추가하고 초대를 보낼 수 있다', async () => {
     const user = userEvent.setup()
 
@@ -83,6 +98,7 @@ describe('InviteStudentsPage', () => {
     expect(screen.getByText('student@example.com')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '초대 보내기' }))
+    expect(inviteByEmail).toHaveBeenCalledWith(1, { emails: ['student@example.com'] })
     expect(await screen.findByRole('status')).toHaveTextContent('1명에게 초대 이메일을 보냈습니다.')
   })
 })

@@ -33,6 +33,7 @@ type SummaryCardProps = {
 type ProblemManagementRowProps = {
   index: number
   problem: StudentProblemListItem
+  spaceId: number
 }
 
 function formatSubmittedAt(iso: string) {
@@ -71,13 +72,17 @@ function ProblemActionChip({
   greenOnHover = false,
   variant,
   muted = false,
+  onClick,
 }: {
   label: string
   accent?: boolean
   greenOnHover?: boolean
   variant?: 'pending' | 'completed'
   muted?: boolean
+  onClick?: () => void
 }) {
+  const isInteractive = Boolean(onClick) || greenOnHover
+
   const className = (() => {
     if (greenOnHover) {
       return 'cursor-pointer border-gray-800 text-light-background transition-colors hover:border-neon-green hover:text-neon-green'
@@ -97,15 +102,17 @@ function ProblemActionChip({
   return (
     <button
       type="button"
-      aria-disabled={greenOnHover ? undefined : true}
-      className={`text-body3 inline-flex items-center justify-center rounded-lg border px-3 py-2 font-bold ${greenOnHover ? '' : 'cursor-default'} ${className}`}
+      onClick={onClick}
+      aria-disabled={isInteractive ? undefined : true}
+      className={`text-body3 inline-flex items-center justify-center rounded-lg border px-3 py-2 font-bold ${isInteractive ? 'cursor-pointer' : 'cursor-default'} ${className}`}
     >
       {label}
     </button>
   )
 }
 
-function ProblemManagementRow({ index, problem }: ProblemManagementRowProps) {
+function ProblemManagementRow({ index, problem, spaceId }: ProblemManagementRowProps) {
+  const navigate = useNavigate()
   const testcaseCount = problem.testcase_count ?? 0
 
   return (
@@ -145,6 +152,9 @@ function ProblemManagementRow({ index, problem }: ProblemManagementRowProps) {
           <ProblemActionChip
             label={TEACHER_SPACE_DETAIL_COPY.editProblem}
             greenOnHover
+            onClick={() =>
+              navigate(`/teacher/spaces/${spaceId}/problems/${problem.id}/edit`)
+            }
           />
         </div>
       </div>
@@ -424,7 +434,12 @@ function SpaceDetailContent({ spaceId }: { spaceId: number }) {
                 </div>
               ) : (
                 teacherProblems.map((problem, index) => (
-                  <ProblemManagementRow key={problem.id} index={index} problem={problem} />
+                  <ProblemManagementRow
+                    key={problem.id}
+                    index={index}
+                    problem={problem}
+                    spaceId={spaceId}
+                  />
                 ))
               )}
             </div>

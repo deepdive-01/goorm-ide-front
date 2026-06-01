@@ -7,20 +7,37 @@ interface UseProblemResult {
   isLoading: boolean
 }
 
+function isValidProblemId(problemId: number): boolean {
+  return Number.isFinite(problemId) && problemId > 0
+}
+
 export function useProblem(
   spaceId: number,
   problemId: number,
 ): UseProblemResult {
+  const isEnabled = isValidProblemId(problemId)
   const [problem, setProblem] = useState<ProblemDetail | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(isEnabled)
 
   useEffect(() => {
+    if (!isEnabled) {
+      return
+    }
+
+    let isMounted = true
+
     const fetch = async () => {
+      setIsLoading(true)
+
       try {
         const [{ data: detail }, testcasesResult] = await Promise.all([
           getProblem(spaceId, problemId),
           getProblemTestcases(problemId).catch(() => null),
         ])
+
+        if (!isMounted) {
+          return
+        }
 
         const testcasesFromDetail = detail.data.testcases ?? []
         const testcases =
@@ -32,14 +49,25 @@ export function useProblem(
           testcases,
         })
       } catch {
-        setProblem(null)
+        if (isMounted) {
+          setProblem(null)
+        }
       } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetch()
-  }, [spaceId, problemId])
 
-  return { problem, isLoading }
+    return () => {
+      isMounted = false
+    }
+  }, [isEnabled, problemId, spaceId])
+
+  return {
+    problem: isEnabled ? problem : null,
+    isLoading: isEnabled && isLoading,
+  }
 }

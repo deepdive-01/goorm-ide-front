@@ -1,4 +1,5 @@
 import {
+  normalizeInviteEmailResponse,
   normalizeWorkspaceCreated,
   normalizeWorkspaceDetail,
   normalizeWorkspaceList,
@@ -14,7 +15,6 @@ import type {
   JoinWorkspaceRequest,
   JoinWorkspaceResponse,
   InviteEmailRequest,
-  InviteEmailResponse,
 } from '@/types/workspace.type'
 
 export const createWorkspace = async (body: CreateWorkspaceRequest) => {
@@ -42,7 +42,9 @@ export const getWorkspaces = async () => {
 }
 
 export const getWorkspace = async (spaceId: number) => {
-  const response = await api.get<ApiResponse<unknown>>(`/api/v1/spaces/${spaceId}`)
+  const response = await api.get<ApiResponse<unknown>>(
+    `/api/v1/spaces/${spaceId}`,
+  )
 
   return {
     ...response,
@@ -88,11 +90,23 @@ export const getWorkspaceMembers = async (spaceId: number) => {
   }
 }
 
-export const inviteByEmail = (spaceId: number, body: InviteEmailRequest) =>
-  api.post<ApiResponse<InviteEmailResponse>>(
+export const inviteByEmail = async (
+  spaceId: number,
+  body: InviteEmailRequest,
+) => {
+  const response = await api.post<ApiResponse<unknown>>(
     `/api/v1/spaces/${spaceId}/invite/email`,
     body,
   )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: normalizeInviteEmailResponse(response.data.data),
+    },
+  }
+}
 
 export async function enrichWorkspacesWithProblemCounts(
   workspaces: WorkspaceListItem[],

@@ -52,6 +52,7 @@ describe('SubmissionReviewPage', () => {
         created_at: '2025-05-11T13:00:00Z',
       },
       isLoading: false,
+      error: null,
     })
 
     vi.mocked(useProblem).mockReturnValue({
