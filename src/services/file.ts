@@ -7,6 +7,8 @@ import type {
   UpdateCodeRequest,
   UpdateFileProblemRequest,
   SubmitCodeRequest,
+  SubmissionDetail,
+  UpdateSubmissionRequest,
   AddTestcaseRequest,
 } from '@/types/file.type'
 
@@ -30,10 +32,27 @@ export const updateFileProblem = (
 export const deleteFileProblem = (problemId: number) =>
   api.delete<ApiResponse<null>>(`/api/v1/files/problems/${problemId}`)
 
-export const submitCode = (problemId: number, body: SubmitCodeRequest) =>
-  api.post<ApiResponse<null>>(
-    `/api/v1/files/problems/${problemId}/submit`,
+export const submitCode = (body: SubmitCodeRequest) =>
+  api.post<ApiResponse<null>>('/api/v1/files/submissions', body)
+
+export const getSubmission = (problemId: number, userId: number) =>
+  api.get<ApiResponse<SubmissionDetail>>(
+    `/api/v1/files/submissions/${problemId}/${userId}`,
+  )
+
+export const updateSubmission = (
+  problemId: number,
+  userId: number,
+  body: UpdateSubmissionRequest,
+) =>
+  api.put<ApiResponse<null>>(
+    `/api/v1/files/submissions/${problemId}/${userId}`,
     body,
+  )
+
+export const deleteSubmission = (problemId: number, userId: number) =>
+  api.delete<ApiResponse<null>>(
+    `/api/v1/files/submissions/${problemId}/${userId}`,
   )
 
 export const resetCode = (problemId: number) =>
