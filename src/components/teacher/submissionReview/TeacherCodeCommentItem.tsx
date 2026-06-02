@@ -12,7 +12,7 @@ function TeacherCodeCommentItem({ comment, onRemove }: TeacherCodeCommentItemPro
   const copy = TEACHER_SUBMISSION_REVIEW_COPY
 
   return (
-    <article className="bg-[#151515] box-border flex w-full max-w-full items-start gap-3 rounded-xl px-7 py-6">
+    <article className="bg-[#151515] box-border flex w-full max-w-full items-start gap-3 rounded-xl px-5 py-5">
       <div className="min-w-0 flex-1">
         <p className="text-body3 text-neon-blue font-bold">
           {formatTeacherLineLabel(comment.startLine, comment.endLine)}

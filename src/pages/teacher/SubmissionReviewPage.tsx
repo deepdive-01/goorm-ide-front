@@ -77,7 +77,7 @@ function SubmissionReviewContent({
     feedbacks,
     isLoading: isFeedbacksLoading,
     refetch: refetchFeedbacks,
-  } = useSubmissionFeedbacks(submissionId)
+  } = useSubmissionFeedbacks(submissionId, review?.submittedAt ?? '')
 
   const problemId = review?.problemId ?? 0
   const { problem, isLoading: isProblemLoading } = useProblem(spaceId, problemId)

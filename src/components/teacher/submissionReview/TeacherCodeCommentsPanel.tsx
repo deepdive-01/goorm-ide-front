@@ -17,7 +17,7 @@ function TeacherCodeCommentsPanel({ comments, onRemove }: TeacherCodeCommentsPan
   return (
     <Card
       width="w-full"
-      className={`bg-[#0d0d0d] border-gray-800 flex min-h-0 min-w-0 flex-col overflow-hidden px-0 py-0 ${TEACHER_REVIEW_PROBLEM_SCROLL_MAX_CLASS}`}
+      className={`bg-[#0d0d0d] border-gray-800 flex min-h-0 min-w-0 flex-col overflow-hidden !px-0 !py-0 ${TEACHER_REVIEW_PROBLEM_SCROLL_MAX_CLASS}`}
     >
       <header className="shrink-0 px-7 pt-6 pb-4">
         <h2 className="text-body1 text-white font-semibold">{copy.codeCommentsTitle}</h2>

@@ -1,4 +1,10 @@
+import { getSubmission } from '@/services/file'
 import { getFeedbacks } from '@/services/feedback'
+import {
+  filterFeedbacksForSubmission,
+  normalizeFeedbackList,
+} from '@/lib/feedbackMapper'
+import type { SubmissionDetail } from '@/types/file.type'
 import type {
   SubmissionItem,
   SubmissionList,
@@ -136,15 +142,41 @@ export function mapSubmissionToTeacherListItem(
   }
 }
 
-function countFeedbacksPayload(data: unknown): number {
-  if (!Array.isArray(data)) {
-    return 0
-  }
-
-  return data.length
+function countValidFeedbacks(data: unknown, submittedAt: string): number {
+  return filterFeedbacksForSubmission(normalizeFeedbackList(data), submittedAt).length
 }
 
-/** 제출별 피드백 목록 API로 댓글 수·피드백 상태를 보강한다 */
+/** 제출 상세 updated_at을 우선해 현재 제출 회차 기준 시각을 구한다 */
+export function resolveSubmissionFeedbackCutoff(
+  detail: SubmissionDetail,
+  listSubmittedAt: string,
+): string {
+  if (!detail.submitted_code) {
+    return ''
+  }
+
+  return detail.updated_at || listSubmittedAt
+}
+
+async function resolveSubmissionFeedbackCutoffForListItem(
+  submission: TeacherSpaceSubmissionListItem,
+): Promise<string> {
+  try {
+    const { data } = await getSubmission(submission.problemId, submission.studentId)
+    return resolveSubmissionFeedbackCutoff(data.data, submission.submittedAt)
+  } catch {
+    return submission.submittedAt
+  }
+}
+
+function resolveFeedbackStatus(
+  apiStatus: TeacherSpaceSubmissionListItem['feedbackStatus'],
+  validCommentCount: number,
+): TeacherSpaceSubmissionListItem['feedbackStatus'] {
+  return apiStatus === 'COMPLETED' && validCommentCount > 0 ? 'COMPLETED' : 'PENDING'
+}
+
+/** 제출별 피드백 목록 API로 댓글 수·상태를 보강한다 (재제출은 submitted_at 기준으로 판별) */
 export async function attachSubmissionFeedbackCounts(
   submissions: TeacherSpaceSubmissionListItem[],
 ): Promise<TeacherSpaceSubmissionListItem[]> {
@@ -152,30 +184,50 @@ export async function attachSubmissionFeedbackCounts(
     return []
   }
 
-  const uniqueSubmissionIds = [...new Set(submissions.map((item) => item.id))]
-  const commentCountBySubmissionId = new Map<number, number>()
+  const submissionsToEnrich = submissions.filter(
+    (submission) => submission.feedbackStatus === 'COMPLETED',
+  )
+  const uniqueSubmissionIds = [
+    ...new Set(submissionsToEnrich.map((item) => item.id)),
+  ]
+  const validCommentCountBySubmissionId = new Map<number, number>()
 
   await Promise.all(
     uniqueSubmissionIds.map(async (submissionId) => {
+      const submission = submissionsToEnrich.find((item) => item.id === submissionId)
+      if (!submission) {
+        return
+      }
+
+      const cutoffAt = await resolveSubmissionFeedbackCutoffForListItem(submission)
+
       try {
         const { data } = await getFeedbacks(submissionId)
-        commentCountBySubmissionId.set(
+        validCommentCountBySubmissionId.set(
           submissionId,
-          countFeedbacksPayload(data.data),
+          countValidFeedbacks(data.data, cutoffAt),
         )
       } catch {
-        commentCountBySubmissionId.set(submissionId, 0)
+        validCommentCountBySubmissionId.set(submissionId, 0)
       }
     }),
   )
 
   return submissions.map((submission) => {
-    const commentCount = commentCountBySubmissionId.get(submission.id) ?? 0
+    if (submission.feedbackStatus === 'PENDING') {
+      return {
+        ...submission,
+        commentCount: 0,
+      }
+    }
+
+    const validCommentCount = validCommentCountBySubmissionId.get(submission.id) ?? 0
+    const feedbackStatus = resolveFeedbackStatus(submission.feedbackStatus, validCommentCount)
 
     return {
       ...submission,
-      commentCount,
-      feedbackStatus: commentCount > 0 ? 'COMPLETED' : 'PENDING',
+      feedbackStatus,
+      commentCount: feedbackStatus === 'COMPLETED' ? validCommentCount : 0,
     }
   })
 }
