@@ -8,6 +8,7 @@ import {
   mockFileProblemDetail,
   mockProblem,
   mockProblemsById,
+  mockSubmissionsByProblemId,
   replaceMockProblemTestcases,
   updateMockProblem,
 } from '../fixtures'
@@ -69,6 +70,17 @@ export const fileHandlers = [
       data: getMockSubmissionDetail(problemId),
     })
   }),
+
+  http.get(
+    '*/api/v1/files/submissions/student/:userId',
+    () =>
+      HttpResponse.json({
+        status: 200,
+        code: 'OK',
+        message: '학생 전체 제출 현황을 조회했습니다.',
+        data: Object.values(mockSubmissionsByProblemId),
+      }),
+  ),
 
   http.put('*/api/v1/files/submissions/:problemId/:userId', () =>
     HttpResponse.json({
