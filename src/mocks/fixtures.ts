@@ -13,7 +13,7 @@ import type { WorkspaceListItem } from '@/types/workspace.type'
 // MSW에서 재사용하는 공통 fixture와, 인증 흐름을 흉내 내기 위한 in-memory 상태 저장소입니다.
 
 // 개발 편의를 위해 앱 첫 진입 시 mock 로그인 상태로 시작할지 결정합니다.
-export const MOCK_IS_LOGGED_IN = true
+export const MOCK_IS_LOGGED_IN = false
 
 if (import.meta.env.VITE_MSW_ENABLED === 'true') {
   if (MOCK_IS_LOGGED_IN) {
