@@ -30,7 +30,7 @@ function AppShell() {
 
           <Route path="/teacher/*" element={<Teacher />} />
 
-          <Route path="/Mypage/*" element={<Mypage />} />
+          <Route path="/mypage/*" element={<Mypage />} />
 
           {/* 기본 라우트 */}
           <Route path="/*" element={<ExamplePage />} />
