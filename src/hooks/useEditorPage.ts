@@ -3,6 +3,7 @@ import { useCurrentUser } from './useCurrentUser'
 import { useCodeExecution } from './useCodeExecution'
 import { gradeCode } from '@/services/codeExecutionService'
 import { canCancelSubmission } from '@/lib/apiMapper'
+import { queryClient } from '@/lib/queryClient'
 import {
   deleteSubmission,
   getSubmission,
@@ -83,11 +84,44 @@ export function useEditorPage({
     setValue(detail.saved_code ?? detail.submitted_code ?? '')
   }
 
-  const refreshSubmission = async () => {
-    if (!user) return
-    const { data } = await getSubmission(problemId, user.id)
-    applySubmissionDetail(data.data)
+  const fetchSubmissionDetail = async (studentId: number) => {
+    const { data } = await getSubmission(problemId, studentId)
+    return data.data
   }
+
+  const syncStudentSubmissionsCache = (
+    studentId: number,
+    nextSubmission: SubmissionDetail,
+  ) => {
+    const queryKey = ['studentSubmissions', studentId] as const
+
+    queryClient.setQueryData<SubmissionDetail[]>(queryKey, (prev = []) => {
+      const next = [...prev]
+      const index = next.findIndex((item) => item.problem_id === nextSubmission.problem_id)
+      if (index >= 0) {
+        next[index] = nextSubmission
+      } else {
+        next.push(nextSubmission)
+      }
+      return next
+    })
+
+    void queryClient.invalidateQueries({ queryKey })
+  }
+
+  const buildFallbackSubmission = (studentId: number): SubmissionDetail => ({
+    id: submission?.id ?? 0,
+    problem_id: problemId,
+    student_id: studentId,
+    saved_code: value || submission?.saved_code || null,
+    submitted_code: submission?.submitted_code ?? null,
+    status: submission?.status ?? 'DRAFT',
+    execution_time_ms: submission?.execution_time_ms ?? null,
+    execution_memory_kb: submission?.execution_memory_kb ?? null,
+    error_message: submission?.error_message ?? null,
+    created_at: submission?.created_at ?? new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  })
 
   // 문제 ID나 사용자가 바뀔 때마다 해당 제출 정보를 불러와 에디터 초기값을 설정합니다.
   useEffect(() => {
@@ -168,6 +202,15 @@ export function useEditorPage({
   const handleSubmit = async () => {
     if (!value.trim() || !user) return
     setIsSubmitting(true)
+    const optimistic = {
+      ...buildFallbackSubmission(user.id),
+      submitted_code: value,
+      status: 'PENDING',
+      updated_at: new Date().toISOString(),
+    }
+    applySubmissionDetail(optimistic)
+    syncStudentSubmissionsCache(user.id, optimistic)
+
     try {
       await submitCode({
         problem_id: problemId,
@@ -175,9 +218,16 @@ export function useEditorPage({
         submitted_code: value,
         is_final_submit: true,
       })
-      await refreshSubmission()
+      const confirmed = await fetchSubmissionDetail(user.id)
+      applySubmissionDetail(confirmed)
+      syncStudentSubmissionsCache(user.id, confirmed)
     } catch (e: unknown) {
       console.error('[submit] 응답 오류:', e)
+      try {
+        const latest = await fetchSubmissionDetail(user.id)
+        applySubmissionDetail(latest)
+        syncStudentSubmissionsCache(user.id, latest)
+      } catch {}
     } finally {
       setIsSubmitting(false)
     }
@@ -186,11 +236,27 @@ export function useEditorPage({
   const handleCancelSubmit = async () => {
     if (!user || !canCancelSubmit) return
     setIsCancelling(true)
+    const optimistic = {
+      ...buildFallbackSubmission(user.id),
+      submitted_code: null,
+      status: 'DRAFT',
+      updated_at: new Date().toISOString(),
+    }
+    applySubmissionDetail(optimistic)
+    syncStudentSubmissionsCache(user.id, optimistic)
+
     try {
       await deleteSubmission(problemId, user.id)
-      await refreshSubmission()
+      const confirmed = await fetchSubmissionDetail(user.id)
+      applySubmissionDetail(confirmed)
+      syncStudentSubmissionsCache(user.id, confirmed)
     } catch (e: unknown) {
       console.error('[cancel submit] 응답 오류:', e)
+      try {
+        const latest = await fetchSubmissionDetail(user.id)
+        applySubmissionDetail(latest)
+        syncStudentSubmissionsCache(user.id, latest)
+      } catch {}
     } finally {
       setIsCancelling(false)
     }

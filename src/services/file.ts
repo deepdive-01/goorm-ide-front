@@ -65,6 +65,22 @@ export const deleteSubmission = (problemId: number, userId: number) =>
     `/api/v1/files/submissions/${problemId}/${userId}`,
   )
 
+export const getStudentSubmissions = async (userId: number) => {
+  const response = await api.get<ApiResponse<unknown>>(
+    `/api/v1/files/submissions/student/${userId}`,
+  )
+
+  return {
+    ...response,
+    data: {
+      ...response.data,
+      data: Array.isArray(response.data.data)
+        ? response.data.data.map((item) => normalizeSubmissionDetail(item))
+        : [],
+    },
+  }
+}
+
 export const resetCode = (problemId: number) =>
   api.delete<ApiResponse<null>>(`/api/v1/files/problems/${problemId}/reset`)
 
