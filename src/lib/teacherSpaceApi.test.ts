@@ -20,6 +20,53 @@ vi.mock('@/services/file', () => ({
   getSubmission: vi.fn(),
 }))
 
+const activeSubmissionDetail = {
+  saved_code: 'draft',
+  submitted_code: 'print(1)',
+  status: 'SUCCESS',
+  execution_time_ms: null,
+  execution_memory_kb: null,
+  error_message: null,
+  created_at: '2026-06-01T00:00:00Z',
+  updated_at: '2026-06-03T10:00:00Z',
+}
+
+function mockActiveSubmission(
+  overrides: Partial<typeof activeSubmissionDetail> & { id?: number; problem_id?: number; student_id?: number } = {},
+) {
+  vi.mocked(getSubmission).mockResolvedValue({
+    data: {
+      data: {
+        id: overrides.id ?? 1,
+        problem_id: overrides.problem_id ?? 10,
+        student_id: overrides.student_id ?? 2,
+        ...activeSubmissionDetail,
+        ...overrides,
+      },
+    },
+  } as Awaited<ReturnType<typeof getSubmission>>)
+}
+
+function mockCancelledSubmission(studentId = 2) {
+  vi.mocked(getSubmission).mockResolvedValue({
+    data: {
+      data: {
+        id: 1,
+        problem_id: 10,
+        student_id: studentId,
+        saved_code: 'draft',
+        submitted_code: null,
+        status: 'DRAFT',
+        execution_time_ms: null,
+        execution_memory_kb: null,
+        error_message: null,
+        created_at: '2026-06-01T00:00:00Z',
+        updated_at: '2026-06-03T12:00:00Z',
+      },
+    },
+  } as Awaited<ReturnType<typeof getSubmission>>)
+}
+
 describe('workspaceMapper', () => {
   it('camelCase 스페이스 목록 응답을 정규화한다', () => {
     expect(
@@ -125,6 +172,7 @@ describe('submissionMapper', () => {
   })
 
   it('피드백 목록 API 결과로 완료된 제출의 댓글 수만 보강한다', async () => {
+    mockActiveSubmission({ student_id: 2 })
     vi.mocked(getFeedbacks).mockImplementation(async (submissionId) => {
       if (submissionId === 1) {
         return { data: { data: [{ feedback_id: 1 }] } } as Awaited<
@@ -167,23 +215,31 @@ describe('submissionMapper', () => {
   })
 
   it('완료된 제출만 피드백 목록을 조회해 현재 제출 회차 댓글 수를 채운다', async () => {
-    vi.mocked(getSubmission).mockResolvedValue({
-      data: {
+    vi.mocked(getSubmission).mockImplementation(async (_problemId, studentId) => {
+      if (studentId === 3) {
+        return {
+          data: {
+            data: {
+              id: 2,
+              problem_id: 10,
+              student_id: 3,
+              ...activeSubmissionDetail,
+            },
+          },
+        } as Awaited<ReturnType<typeof getSubmission>>
+      }
+
+      return {
         data: {
-          id: 2,
-          problem_id: 10,
-          student_id: 3,
-          saved_code: null,
-          submitted_code: 'print(1)',
-          status: 'SUCCESS',
-          execution_time_ms: null,
-          execution_memory_kb: null,
-          error_message: null,
-          created_at: '2026-06-01T00:00:00Z',
-          updated_at: '2026-06-03T10:00:00Z',
+          data: {
+            id: 1,
+            problem_id: 10,
+            student_id: 2,
+            ...activeSubmissionDetail,
+          },
         },
-      },
-    } as Awaited<ReturnType<typeof getSubmission>>)
+      } as Awaited<ReturnType<typeof getSubmission>>
+    })
 
     vi.mocked(getFeedbacks).mockImplementation(async (submissionId) => {
       if (submissionId === 2) {
@@ -235,23 +291,7 @@ describe('submissionMapper', () => {
 
   it('재제출 후 has_feedback이 true여도 submitted_at 이전 피드백은 무시하고 대기 중으로 표시한다', async () => {
     vi.mocked(getFeedbacks).mockClear()
-    vi.mocked(getSubmission).mockResolvedValue({
-      data: {
-        data: {
-          id: 99,
-          problem_id: 10,
-          student_id: 2,
-          saved_code: null,
-          submitted_code: 'print(1)',
-          status: 'SUCCESS',
-          execution_time_ms: null,
-          execution_memory_kb: null,
-          error_message: null,
-          created_at: '2026-06-01T00:00:00Z',
-          updated_at: '2026-06-03T10:00:00Z',
-        },
-      },
-    } as Awaited<ReturnType<typeof getSubmission>>)
+    mockActiveSubmission({ id: 99, student_id: 2 })
     vi.mocked(getFeedbacks).mockResolvedValue({
       data: {
         data: [
@@ -280,23 +320,7 @@ describe('submissionMapper', () => {
 
   it('목록 submitted_at이 갱신되지 않아도 제출 상세 updated_at으로 재제출을 판별한다', async () => {
     vi.mocked(getFeedbacks).mockClear()
-    vi.mocked(getSubmission).mockResolvedValue({
-      data: {
-        data: {
-          id: 99,
-          problem_id: 10,
-          student_id: 2,
-          saved_code: null,
-          submitted_code: 'print(1)',
-          status: 'SUCCESS',
-          execution_time_ms: null,
-          execution_memory_kb: null,
-          error_message: null,
-          created_at: '2026-06-01T00:00:00Z',
-          updated_at: '2026-06-03T10:00:00Z',
-        },
-      },
-    } as Awaited<ReturnType<typeof getSubmission>>)
+    mockActiveSubmission({ id: 99, student_id: 2 })
     vi.mocked(getFeedbacks).mockResolvedValue({
       data: {
         data: [{ feedback_id: 1, created_at: '2026-06-02T10:00:00Z' }],
@@ -322,6 +346,7 @@ describe('submissionMapper', () => {
 
   it('재제출 등으로 has_feedback이 false이면 피드백 API를 조회하지 않는다', async () => {
     vi.mocked(getFeedbacks).mockClear()
+    mockActiveSubmission({ id: 99, student_id: 2 })
     vi.mocked(getFeedbacks).mockResolvedValue({
       data: { data: [{ feedback_id: 1 }, { feedback_id: 2 }] },
     } as Awaited<ReturnType<typeof getFeedbacks>>)
@@ -342,5 +367,26 @@ describe('submissionMapper', () => {
     expect(getFeedbacks).not.toHaveBeenCalled()
     expect(item?.commentCount).toBe(0)
     expect(item?.feedbackStatus).toBe('PENDING')
+  })
+
+  it('제출 취소 후에는 제출 현황 목록에서 제외한다', async () => {
+    vi.mocked(getFeedbacks).mockClear()
+    mockCancelledSubmission(2)
+
+    const result = await attachSubmissionFeedbackCounts([
+      {
+        id: 99,
+        problemId: 10,
+        studentId: 2,
+        studentNickname: '최학생',
+        problemTitle: '문제',
+        submittedAt: '2026-06-01T10:00:00Z',
+        feedbackStatus: 'COMPLETED',
+        commentCount: 0,
+      },
+    ])
+
+    expect(getFeedbacks).not.toHaveBeenCalled()
+    expect(result).toEqual([])
   })
 })

@@ -158,17 +158,6 @@ export function resolveSubmissionFeedbackCutoff(
   return detail.updated_at || listSubmittedAt
 }
 
-async function resolveSubmissionFeedbackCutoffForListItem(
-  submission: TeacherSpaceSubmissionListItem,
-): Promise<string> {
-  try {
-    const { data } = await getSubmission(submission.problemId, submission.studentId)
-    return resolveSubmissionFeedbackCutoff(data.data, submission.submittedAt)
-  } catch {
-    return submission.submittedAt
-  }
-}
-
 function resolveFeedbackStatus(
   apiStatus: TeacherSpaceSubmissionListItem['feedbackStatus'],
   validCommentCount: number,
@@ -176,44 +165,49 @@ function resolveFeedbackStatus(
   return apiStatus === 'COMPLETED' && validCommentCount > 0 ? 'COMPLETED' : 'PENDING'
 }
 
-/** 제출별 피드백 목록 API로 댓글 수·상태를 보강한다 (재제출은 submitted_at 기준으로 판별) */
-export async function attachSubmissionFeedbackCounts(
-  submissions: TeacherSpaceSubmissionListItem[],
-): Promise<TeacherSpaceSubmissionListItem[]> {
-  if (submissions.length === 0) {
-    return []
-  }
+/**
+ * 제출 현황 목록 보강 규칙
+ * - 제출 취소(submitted_code 없음): 목록에서 제외
+ * - 제출 중 + 피드백 없음: 대기 중, 댓글 0
+ * - 제출 중 + 재제출: submitted_at/updated_at 이후 피드백만 유효, 없으면 대기 중
+ * - 제출 중 + 피드백 완료: 유효 피드백 수 표시
+ */
+async function enrichSubmissionListItem(
+  submission: TeacherSpaceSubmissionListItem,
+): Promise<TeacherSpaceSubmissionListItem | null> {
+  try {
+    const { data } = await getSubmission(submission.problemId, submission.studentId)
+    const detail = data.data
 
-  const submissionsToEnrich = submissions.filter(
-    (submission) => submission.feedbackStatus === 'COMPLETED',
-  )
-  const uniqueSubmissionIds = [
-    ...new Set(submissionsToEnrich.map((item) => item.id)),
-  ]
-  const validCommentCountBySubmissionId = new Map<number, number>()
+    if (!detail.submitted_code) {
+      return null
+    }
 
-  await Promise.all(
-    uniqueSubmissionIds.map(async (submissionId) => {
-      const submission = submissionsToEnrich.find((item) => item.id === submissionId)
-      if (!submission) {
-        return
+    const submittedAt = detail.updated_at || submission.submittedAt
+    const cutoffAt = resolveSubmissionFeedbackCutoff(detail, submission.submittedAt)
+
+    if (submission.feedbackStatus === 'PENDING') {
+      return {
+        ...submission,
+        submittedAt,
+        feedbackStatus: 'PENDING',
+        commentCount: 0,
       }
+    }
 
-      const cutoffAt = await resolveSubmissionFeedbackCutoffForListItem(submission)
+    const validCommentCount = await getFeedbacks(submission.id)
+      .then(({ data: feedbackData }) => countValidFeedbacks(feedbackData.data, cutoffAt))
+      .catch(() => 0)
 
-      try {
-        const { data } = await getFeedbacks(submissionId)
-        validCommentCountBySubmissionId.set(
-          submissionId,
-          countValidFeedbacks(data.data, cutoffAt),
-        )
-      } catch {
-        validCommentCountBySubmissionId.set(submissionId, 0)
-      }
-    }),
-  )
+    const feedbackStatus = resolveFeedbackStatus(submission.feedbackStatus, validCommentCount)
 
-  return submissions.map((submission) => {
+    return {
+      ...submission,
+      submittedAt,
+      feedbackStatus,
+      commentCount: feedbackStatus === 'COMPLETED' ? validCommentCount : 0,
+    }
+  } catch {
     if (submission.feedbackStatus === 'PENDING') {
       return {
         ...submission,
@@ -221,13 +215,19 @@ export async function attachSubmissionFeedbackCounts(
       }
     }
 
-    const validCommentCount = validCommentCountBySubmissionId.get(submission.id) ?? 0
-    const feedbackStatus = resolveFeedbackStatus(submission.feedbackStatus, validCommentCount)
+    return submission
+  }
+}
 
-    return {
-      ...submission,
-      feedbackStatus,
-      commentCount: feedbackStatus === 'COMPLETED' ? validCommentCount : 0,
-    }
-  })
+/** 제출 상세·피드백 API로 제출 현황 목록을 보강한다 */
+export async function attachSubmissionFeedbackCounts(
+  submissions: TeacherSpaceSubmissionListItem[],
+): Promise<TeacherSpaceSubmissionListItem[]> {
+  if (submissions.length === 0) {
+    return []
+  }
+
+  const results = await Promise.all(submissions.map(enrichSubmissionListItem))
+
+  return results.filter((item): item is TeacherSpaceSubmissionListItem => item !== null)
 }
