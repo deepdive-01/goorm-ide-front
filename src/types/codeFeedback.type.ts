@@ -32,6 +32,8 @@ export interface StudentCodeCommentItem {
   id: string
   authorName: string
   lineNumber: number
+  /** 여러 줄 코멘트일 때 끝 줄 (미설정 시 lineNumber) */
+  endLineNumber?: number
   message: string
   createdAt?: string
 }

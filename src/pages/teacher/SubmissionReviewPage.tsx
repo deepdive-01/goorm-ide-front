@@ -8,18 +8,31 @@ import TeacherOverallFeedbackPanel from '@/components/teacher/submissionReview/T
 import TeacherStudentCodeSection from '@/components/teacher/submissionReview/TeacherStudentCodeSection'
 import TeacherSubmissionReviewSubHeader from '@/components/teacher/submissionReview/TeacherSubmissionReviewSubHeader'
 import {
+  TEACHER_OVERALL_FEEDBACK_MAX_LENGTH,
   TEACHER_REVIEW_PROBLEM_SCROLL_MAX_CLASS,
   TEACHER_SUBMISSION_REVIEW_COPY,
 } from '@/content/teacherSubmissionReview'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useProblem } from '@/hooks/useProblem'
+import {
+  useSubmissionFeedbacks,
+  useTeacherSubmissionReview,
+} from '@/hooks/useTeacherSubmissionReview'
+import { useProblems } from '@/hooks/useProblems'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { getRoleSpacesPath } from '@/lib/authRoutes'
-import { buildTeacherLineSelection, type TeacherLineSelection } from '@/lib/teacherLineComment'
+import {
+  findOverallFeedbackComment,
+  mapHighlightsToTeacherLineComments,
+} from '@/lib/feedbackMapper'
 import { toEditorLanguage } from '@/lib/problemLanguage'
-import { mockTeacherSubmissionReviews } from '@/mocks/fixtures'
-import type { TeacherLineComment } from '@/types/teacherSubmissionReview.type'
-
+import { buildTeacherLineSelection, type TeacherLineSelection } from '@/lib/teacherLineComment'
+import {
+  createComment,
+  createHighlight,
+  deleteFeedback,
+  updateFeedback,
+} from '@/services/feedback'
 function SubmissionReviewPage() {
   const { spaceId: spaceIdParam, submissionId: submissionIdParam } = useParams()
   const spaceId = Number(spaceIdParam)
@@ -51,62 +64,157 @@ function SubmissionReviewContent({
   submissionId: number
 }) {
   const navigate = useNavigate()
-  const submissionReview = mockTeacherSubmissionReviews[submissionId]
   const { user, isLoading: isUserLoading } = useCurrentUser()
   const { workspace, isLoading: isWorkspaceLoading } = useWorkspace(spaceId)
-  const problemId = submissionReview?.problemId ?? 0
+  const { problems, isLoading: isProblemsLoading } = useProblems(spaceId)
+  const {
+    review,
+    isLoading: isReviewLoading,
+    error: reviewError,
+    refetch: refetchReview,
+  } = useTeacherSubmissionReview(submissionId, problems, isProblemsLoading)
+  const {
+    feedbacks,
+    isLoading: isFeedbacksLoading,
+    refetch: refetchFeedbacks,
+  } = useSubmissionFeedbacks(submissionId)
+
+  const problemId = review?.problemId ?? 0
   const { problem, isLoading: isProblemLoading } = useProblem(spaceId, problemId)
 
-  const [lineComments, setLineComments] = useState<TeacherLineComment[]>(
-    () => submissionReview?.lineComments.map((comment) => ({ ...comment })) ?? [],
+  const lineComments = useMemo(
+    () => mapHighlightsToTeacherLineComments(feedbacks),
+    [feedbacks],
   )
-  const [overallFeedback, setOverallFeedback] = useState(
-    () => submissionReview?.overallFeedback ?? '',
+
+  const overallFromFeedbacks = useMemo(() => {
+    const overall = findOverallFeedbackComment(feedbacks)
+    return {
+      content: overall?.content ?? '',
+      id: overall?.feedback_id ?? null,
+    }
+  }, [feedbacks])
+
+  const [overallDraft, setOverallDraft] = useState<{
+    content: string
+    id: number | null
+  } | null>(null)
+
+  const overallFeedback =
+    overallDraft?.content ??
+    (isFeedbacksLoading ? '' : overallFromFeedbacks.content)
+  const overallFeedbackId = overallDraft?.id ?? overallFromFeedbacks.id
+
+  const handleOverallFeedbackChange = useCallback(
+    (content: string) => {
+      setOverallDraft((previous) => ({
+        content,
+        id: previous?.id ?? overallFromFeedbacks.id,
+      }))
+    },
+    [overallFromFeedbacks.id],
   )
+
   const [lineSelection, setLineSelection] = useState<TeacherLineSelection | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const editorLanguage = useMemo(
     () => (problem ? toEditorLanguage(problem.language) : 'PYTHON'),
     [problem],
   )
 
-  const isLoading = isUserLoading || isWorkspaceLoading || isProblemLoading
+  const isLoading =
+    isUserLoading ||
+    isWorkspaceLoading ||
+    isProblemsLoading ||
+    isReviewLoading ||
+    isProblemLoading ||
+    isFeedbacksLoading
 
   const handleLineNumberClick = useCallback((lineNumber: number, shiftKey: boolean) => {
     setLineSelection((previous) => buildTeacherLineSelection(previous, lineNumber, shiftKey))
   }, [])
 
   const handleAddLineComment = useCallback(
-    (startLine: number, endLine: number, message: string) => {
-      setLineComments((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          startLine,
-          endLine,
-          message,
-        },
-      ])
-      setLineSelection(null)
+    async (startLine: number, endLine: number, message: string) => {
+      const trimmed = message.trim()
+      if (!trimmed) {
+        setActionError(TEACHER_SUBMISSION_REVIEW_COPY.lineCommentRequired)
+        return
+      }
+
+      if (!review) return
+
+      setActionError(null)
+
+      try {
+        await createHighlight({
+          submission_id: review.submissionId,
+          start_line: startLine,
+          end_line: endLine,
+          color: 'YELLOW',
+          content: trimmed,
+        })
+        setLineSelection(null)
+        refetchFeedbacks()
+      } catch {
+        setActionError(TEACHER_SUBMISSION_REVIEW_COPY.saveCommentError)
+      }
     },
-    [],
+    [review, refetchFeedbacks],
   )
 
-  const handleRemoveLineComment = useCallback((id: string) => {
-    setLineComments((prev) => prev.filter((comment) => comment.id !== id))
-  }, [])
+  const handleRemoveLineComment = useCallback(
+    async (id: string) => {
+      const feedbackId = Number(id)
+      if (!Number.isFinite(feedbackId) || feedbackId <= 0) {
+        return
+      }
+
+      setActionError(null)
+
+      try {
+        await deleteFeedback(feedbackId)
+        refetchFeedbacks()
+      } catch {
+        setActionError(TEACHER_SUBMISSION_REVIEW_COPY.deleteCommentError)
+      }
+    },
+    [refetchFeedbacks],
+  )
 
   const handleSave = useCallback(async () => {
+    if (!review) return
+
+    const trimmed = overallFeedback.trim()
+    if (trimmed.length > TEACHER_OVERALL_FEEDBACK_MAX_LENGTH) {
+      setActionError(TEACHER_SUBMISSION_REVIEW_COPY.overallFeedbackMaxLength)
+      return
+    }
+
     setIsSaving(true)
+    setActionError(null)
+
     try {
-      // API 연동 전까지 로컬 상태만 유지
-      await Promise.resolve()
+      if (trimmed) {
+        if (overallFeedbackId) {
+          await updateFeedback(overallFeedbackId, { content: trimmed })
+        } else {
+          await createComment({
+            submission_id: review.submissionId,
+            content: trimmed,
+          })
+        }
+      }
+
       navigate(`/teacher/spaces/${spaceId}`)
+    } catch {
+      setActionError(TEACHER_SUBMISSION_REVIEW_COPY.saveReviewError)
     } finally {
       setIsSaving(false)
     }
-  }, [navigate, spaceId])
+  }, [navigate, overallFeedback, overallFeedbackId, review, spaceId])
 
   if (isUserLoading) {
     return (
@@ -124,7 +232,27 @@ function SubmissionReviewContent({
     return <Navigate to={getRoleSpacesPath(user)} replace />
   }
 
-  if (!submissionReview) {
+  if (!isLoading && (reviewError || !review)) {
+    return (
+      <main className="bg-background text-light-background flex flex-1 flex-col items-center justify-center gap-4 px-4">
+        <p className="text-body1 text-gray-400">
+          {reviewError ?? TEACHER_SUBMISSION_REVIEW_COPY.invalidParams}
+        </p>
+        <button
+          type="button"
+          className="text-body2 text-neon-green hover:underline"
+          onClick={() => {
+            refetchReview()
+            refetchFeedbacks()
+          }}
+        >
+          다시 시도
+        </button>
+      </main>
+    )
+  }
+
+  if (!isLoading && (!workspace || !problem || !review)) {
     return (
       <main className="bg-background text-light-background flex flex-1 items-center justify-center px-4">
         <p className="text-body1 text-gray-400">
@@ -134,17 +262,7 @@ function SubmissionReviewContent({
     )
   }
 
-  if (!isLoading && (!workspace || !problem)) {
-    return (
-      <main className="bg-background text-light-background flex flex-1 items-center justify-center px-4">
-        <p className="text-body1 text-gray-400">
-          {TEACHER_SUBMISSION_REVIEW_COPY.invalidParams}
-        </p>
-      </main>
-    )
-  }
-
-  if (isLoading || !workspace || !problem) {
+  if (isLoading || !workspace || !problem || !review) {
     return (
       <main className="bg-background flex flex-1 items-center justify-center">
         <Spinner size="md" color="text-neon-green" />
@@ -156,11 +274,17 @@ function SubmissionReviewContent({
     <div className="bg-background text-light-background flex flex-1 flex-col">
       <TeacherSubmissionReviewSubHeader
         spaceName={workspace.name}
-        studentNickname={submissionReview.studentNickname}
+        studentNickname={review.studentNickname}
         onBack={() => navigate(`/teacher/spaces/${spaceId}`)}
         onSave={handleSave}
         isSaving={isSaving}
       />
+
+      {actionError && (
+        <p className="text-body2 text-red-400 mx-auto w-full max-w-[1512px] px-4 sm:px-16 lg:px-22">
+          {actionError}
+        </p>
+      )}
 
       <main className="mx-auto flex min-h-0 w-full max-w-[1512px] flex-1 flex-col gap-6 px-4 py-6 sm:px-16 lg:px-22 lg:py-8">
         <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-2">
@@ -173,9 +297,9 @@ function SubmissionReviewContent({
             </Card>
 
             <TeacherStudentCodeSection
-              code={submissionReview.code}
+              code={review.code}
               language={editorLanguage}
-              submittedAt={submissionReview.submittedAt}
+              submittedAt={review.submittedAt}
               lineComments={lineComments}
               lineSelection={lineSelection}
               onLineNumberClick={handleLineNumberClick}
@@ -191,7 +315,7 @@ function SubmissionReviewContent({
             />
             <TeacherOverallFeedbackPanel
               value={overallFeedback}
-              onChange={setOverallFeedback}
+              onChange={handleOverallFeedbackChange}
             />
           </section>
         </div>

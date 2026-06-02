@@ -12,6 +12,7 @@ import { useProblems } from '@/hooks/useProblems'
 import { useSpaceSubmissions } from '@/hooks/useSpaceSubmissions'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { getRoleSpacesPath } from '@/lib/authRoutes'
+import { formatApiDateTime } from '@/lib/formatDateTime'
 import type { StudentProblemListItem } from '@/types/studentProblem.type'
 import type { TeacherSpaceSubmissionListItem } from '@/types/teacherSpaceSubmission.type'
 
@@ -37,14 +38,7 @@ type ProblemManagementRowProps = {
 }
 
 function formatSubmittedAt(iso: string) {
-  const date = new Date(iso)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-
-  return `${year}-${month}-${day} ${hours}:${minutes}`
+  return formatApiDateTime(iso)
 }
 
 function getNicknameInitial(nickname: string) {
@@ -210,11 +204,11 @@ function SubmissionStatusRow({
               >
                 {submission.problemTitle}
               </span>
-              <span className="text-body3 text-[#b7b7b7]">
-                {submission.submittedAt
-                  ? formatSubmittedAt(submission.submittedAt)
-                  : TEACHER_SPACE_DETAIL_COPY.submissionTimeUnknown}
-              </span>
+              {submission.submittedAt && (
+                <span className="text-body3 text-[#b7b7b7]">
+                  {formatSubmittedAt(submission.submittedAt)}
+                </span>
+              )}
             </div>
           </div>
         </div>
