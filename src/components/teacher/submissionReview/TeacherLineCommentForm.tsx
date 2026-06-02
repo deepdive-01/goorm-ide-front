@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import Button from '@/components/common/Button/Button'
-import { TEACHER_SUBMISSION_REVIEW_COPY } from '@/content/teacherSubmissionReview'
+import {
+  TEACHER_SUBMISSION_REVIEW_COPY,
+} from '@/content/teacherSubmissionReview'
 
 type TeacherLineCommentFormProps = {
   startLine: number

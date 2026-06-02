@@ -31,7 +31,16 @@ export const TEACHER_SUBMISSION_REVIEW_COPY = {
     startLine === endLine ? `줄 ${startLine}` : `줄 ${startLine}-${endLine}`,
   emptyCodeComments: '코드 코멘트가 없습니다.',
   cancelLineComment: '취소',
+  lineCommentRequired: '댓글 내용을 입력해주세요',
+  overallFeedbackMaxLength: '피드백 길이를 초과했습니다',
+  saveCommentError: '댓글 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
+  deleteCommentError: '댓글 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.',
+  saveReviewError: '리뷰 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
+  loadReviewError: '제출 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
 } as const
+
+/** 전체 피드백 최대 길이 (Swagger 기준) */
+export const TEACHER_OVERALL_FEEDBACK_MAX_LENGTH = 2000
 
 export const MOCK_TEACHER_SUBMITTED_CODE = `# 두 수를 입력받아 합을 출력하세요
 a,b=map(int,input().split())

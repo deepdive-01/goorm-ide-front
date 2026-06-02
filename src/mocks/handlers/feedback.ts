@@ -37,10 +37,27 @@ export const feedbackHandlers = [
     const submissionId = Number(url.searchParams.get('submission_id'))
 
     const data =
-      submissionId === 2
-        ? [mockFeedback]
-        : submissionId === 1
-          ? []
+      submissionId === 1
+        ? [
+            {
+              ...mockFeedback,
+              feedback_id: 1,
+              type: 'HIGHLIGHT' as const,
+              content: 'map 함수를 사용해 깔끔하게 처리했네요!',
+              start_line: 2,
+              end_line: 2,
+              color: 'YELLOW' as const,
+            },
+          ]
+        : submissionId === 2
+          ? [
+              {
+                ...mockFeedback,
+                feedback_id: 2,
+                type: 'COMMENT' as const,
+                content: '전반적으로 잘 작성했습니다.',
+              },
+            ]
           : [mockFeedback]
 
     return HttpResponse.json({

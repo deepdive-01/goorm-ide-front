@@ -45,9 +45,11 @@ function TeacherStudentCodeSection({
       <header className="shrink-0 px-7 pt-6 pb-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-body1 text-white font-semibold">{copy.studentCode}</h2>
-          <p className="text-body2 text-gray-400">
-            {copy.submittedAt(formatSubmissionDateTime(submittedAt))}
-          </p>
+          {submittedAt && (
+            <p className="text-body2 text-gray-400">
+              {copy.submittedAt(formatSubmissionDateTime(submittedAt))}
+            </p>
+          )}
         </div>
         <p className="text-body3 text-gray-500 mt-3">{copy.lineClickHint}</p>
       </header>
