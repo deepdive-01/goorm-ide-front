@@ -1,10 +1,10 @@
 import Profile from './Profile'
 import Notification from '@/components/Notification/Notification'
-import SubmitCheck from '@/pages/MyPage/SubmitCheck'
+// import SubmitCheck from '@/pages/MyPage/SubmitCheck'
 
 function Mypage() {
   return (
-    <div className="bg-background min-h-screen px-22">
+    <div className="bg-background flex h-full flex-col gap-9 px-22 pb-9">
       {/* Title */}
       <div className="pt-9">
         <div className="text-head1 text-light-background">마이페이지</div>
@@ -14,13 +14,13 @@ function Mypage() {
       </div>
 
       <div className="flex gap-9">
-        {/* Left Content */}
-        <div className="flex flex-col gap-9 py-9">
+        <div className="w-[35%]">
           <Profile />
+        </div>
+        <div className="flex w-[65%] flex-col gap-9">
+          {/* <SubmitCheck /> */}
           <Notification variant="page" />
         </div>
-        {/* Right Content */}
-        <SubmitCheck />
       </div>
     </div>
   )

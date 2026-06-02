@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { mockNotification, mockNotifications } from '../fixtures'
 
 export const notificationHandlers = [
-  http.get('*/api/v1/notification', ({ request }) => {
+  http.get('*/api/v1/notifications', ({ request }) => {
     const url = new URL(request.url)
     const isRead = url.searchParams.get('isRead')
     const filtered =
@@ -23,7 +23,7 @@ export const notificationHandlers = [
     })
   }),
 
-  http.patch('*/api/v1/notification/read-all', () => {
+  http.patch('*/api/v1/notifications/read-all', () => {
     const updatedCount = mockNotifications.filter((n) => !n.isRead).length
     mockNotifications.forEach((n) => {
       n.isRead = true
@@ -36,7 +36,7 @@ export const notificationHandlers = [
     })
   }),
 
-  http.patch('*/api/v1/notification/:id/read', ({ params }) => {
+  http.patch('*/api/v1/notifications/:id/read', ({ params }) => {
     const notification = mockNotifications.find(
       (n) => n.id === Number(params.id),
     )
@@ -49,7 +49,7 @@ export const notificationHandlers = [
     })
   }),
 
-  http.post('*/api/v1/notification', () =>
+  http.post('*/api/v1/notifications', () =>
     HttpResponse.json({
       status: 201,
       code: 'NOTIFICATION_CREATE_SUCCESS',

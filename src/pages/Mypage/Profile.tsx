@@ -1,7 +1,10 @@
-import { UserPen, UserRound } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { UserRound } from 'lucide-react'
 import Card from '@/components/common/Card/Card'
 import Badge from '@/components/common/Badge/Badge'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { deleteMe } from '@/services/user'
 
 const ROLE_LABEL: Record<string, string> = {
   STUDENT: '학생',
@@ -10,23 +13,39 @@ const ROLE_LABEL: Record<string, string> = {
 
 function Profile() {
   const { user, isLoading } = useCurrentUser()
+  const navigate = useNavigate()
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+
+  const handleWithdraw = async () => {
+    if (!confirm('정말 탈퇴하시겠습니까?')) return
+    setIsWithdrawing(true)
+    try {
+      await deleteMe()
+    } finally {
+      localStorage.removeItem('access_token')
+      navigate('/login')
+    }
+  }
 
   if (isLoading || !user) return null
 
   return (
-    <Card width="w-92">
+    <Card width="w-full">
       <div className="flex items-center justify-between">
         <div className="text-head3 text-light-background">프로필</div>
-        <div className="text-body3 flex items-center">
-          <UserPen size={15} />
-          편집
-        </div>
+        <button
+          onClick={handleWithdraw}
+          disabled={isWithdrawing}
+          className="text-body3 bg-neon-green cursor-pointer rounded-sm px-3 py-1 font-medium text-black disabled:opacity-50"
+        >
+          회원 탈퇴하기
+        </button>
       </div>
 
       <div className="flex flex-col items-center gap-4 py-6">
         <Badge ariaLabel="프로필" size="lg" children />
 
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-2">
           <div className="text-head3 text-light-background">
             {user.nickname}
           </div>
