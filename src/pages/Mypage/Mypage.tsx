@@ -1,6 +1,5 @@
 import Profile from './Profile'
 import Notification from '@/components/Notification/Notification'
-// import SubmitCheck from '@/pages/MyPage/SubmitCheck'
 
 function Mypage() {
   return (
@@ -18,7 +17,6 @@ function Mypage() {
           <Profile />
         </div>
         <div className="flex w-[65%] flex-col gap-9">
-          {/* <SubmitCheck /> */}
           <Notification variant="page" />
         </div>
       </div>

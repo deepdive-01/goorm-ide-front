@@ -11,7 +11,7 @@ import LandingPage from '@/pages/LandingPage'
 import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 import Student from '@/routes/Student'
 import Teacher from '@/routes/Teacher'
-import Mypage from '@/pages/MyPage/Mypage'
+import Mypage from '@/pages/Mypage/Mypage'
 import { shouldShowFooter } from '@/lib/footerVisibility'
 
 function AppShell() {
