@@ -11,6 +11,7 @@ import LandingPage from '@/pages/LandingPage'
 import SpacesEntryRedirect from '@/pages/SpacesEntryRedirect'
 import Student from '@/routes/Student'
 import Teacher from '@/routes/Teacher'
+import Mypage from '@/pages/Mypage/Mypage'
 import { shouldShowFooter } from '@/lib/footerVisibility'
 
 function AppShell() {
@@ -28,6 +29,8 @@ function AppShell() {
           <Route path="/student/*" element={<Student />} />
 
           <Route path="/teacher/*" element={<Teacher />} />
+
+          <Route path="/mypage/*" element={<Mypage />} />
 
           {/* 기본 라우트 */}
           <Route path="/*" element={<ExamplePage />} />

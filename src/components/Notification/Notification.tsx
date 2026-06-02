@@ -7,7 +7,7 @@ import Pagination from './Pagination'
 
 type NotificationTab = 'all' | 'unread'
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 6
 
 interface NotificationProps {
   variant: 'popup' | 'page'
@@ -20,9 +20,12 @@ function Notification({ variant }: NotificationProps) {
   const { data, readAll, readOne } = useNotifications()
   const totalCount = data?.totalCount ?? 0
   const unreadCount = data?.unreadCount ?? 0
-  const allNotifications = (data?.notifications ?? []).slice().sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  )
+  const allNotifications = (data?.notifications ?? [])
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
   const tabFiltered =
     activeTab === 'unread'
       ? allNotifications.filter((n) => !n.isRead)
@@ -34,7 +37,7 @@ function Notification({ variant }: NotificationProps) {
     : tabFiltered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
 
   return (
-    <Card width="w-92" className="pb-0">
+    <Card width={isPopup ? 'w-92' : 'w-full'} className="pb-0">
       {/* Notification Title */}
       <div
         id="notiTitle"
