@@ -462,7 +462,9 @@ function cloneMockProblemDetail(problem: MockProblemDetail): MockProblemDetail {
   }
 }
 
-function cloneMockProblemListItem(item: MockProblemListItem): MockProblemListItem {
+function cloneMockProblemListItem(
+  item: MockProblemListItem,
+): MockProblemListItem {
   return { ...item }
 }
 
@@ -501,7 +503,9 @@ function buildInitialMockSubmissions(): Record<number, SubmissionDetail> {
         status: 'COMPLETED',
       })
     } else {
-      submissions[item.id] = createMockSubmissionDetail(item.id, { status: 'DRAFT' })
+      submissions[item.id] = createMockSubmissionDetail(item.id, {
+        status: 'DRAFT',
+      })
     }
   }
 
@@ -799,7 +803,10 @@ export const mockSubmission = {
 }
 
 // 강사 제출 리뷰 상세 (API 연동 전 목 데이터)
-export const mockTeacherSubmissionReviews: Record<number, TeacherSubmissionReviewDetail> = {
+export const mockTeacherSubmissionReviews: Record<
+  number,
+  TeacherSubmissionReviewDetail
+> = {
   1: {
     submissionId: 1,
     problemId: 1,
@@ -823,7 +830,8 @@ export const mockTeacherSubmissionReviews: Record<number, TeacherSubmissionRevie
     submittedAt: '2026-05-06T09:15:00Z',
     code: MOCK_TEACHER_SUBMITTED_CODE,
     lineComments: [],
-    overallFeedback: '전반적으로 잘 작성했습니다. 변수명을 조금 더 명확하게 하면 좋겠어요.',
+    overallFeedback:
+      '전반적으로 잘 작성했습니다. 변수명을 조금 더 명확하게 하면 좋겠어요.',
   },
 }
 
