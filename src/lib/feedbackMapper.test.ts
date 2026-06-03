@@ -5,6 +5,7 @@ import {
   mapFeedbacksToStudentViews,
   mapHighlightsToTeacherLineComments,
   normalizeFeedbackItem,
+  splitOverallFeedbacksForSubmission,
 } from '@/lib/feedbackMapper'
 
 describe('feedbackMapper', () => {
@@ -109,7 +110,7 @@ describe('feedbackMapper', () => {
     })
   })
 
-  it('submitted_at 이전 피드백은 재제출 회차에서 제외한다', () => {
+  it('submitted_at 이전 줄 코멘트는 재제출 회차에서 제외한다', () => {
     const feedbacks = [
       normalizeFeedbackItem({
         feedback_id: 1,
@@ -137,5 +138,60 @@ describe('feedbackMapper', () => {
     expect(
       filterFeedbacksForSubmission(feedbacks, '2026-06-03T10:00:00Z')[0]?.feedback_id,
     ).toBe(2)
+  })
+
+  it('현재 제출 회차와 과거 전체 피드백을 분리한다', () => {
+    const feedbacks = [
+      normalizeFeedbackItem({
+        feedback_id: 1,
+        type: 'COMMENT',
+        content: '이전 제출 피드백',
+        created_by: '김강사',
+        created_at: '2026-06-01T10:00:00Z',
+      }),
+      normalizeFeedbackItem({
+        feedback_id: 2,
+        type: 'COMMENT',
+        content: '이번 제출 피드백',
+        created_by: '김강사',
+        created_at: '2026-06-03T11:00:00Z',
+      }),
+    ]
+
+    const { current, past } = splitOverallFeedbacksForSubmission(
+      feedbacks,
+      '2026-06-03T10:00:00Z',
+    )
+
+    expect(current?.feedback_id).toBe(2)
+    expect(past).toHaveLength(1)
+    expect(past[0]?.feedback_id).toBe(1)
+  })
+
+  it('재제출 후에도 전체 피드백(COMMENT)은 유지한다', () => {
+    const feedbacks = [
+      normalizeFeedbackItem({
+        feedback_id: 1,
+        type: 'COMMENT',
+        content: '이전 제출 피드백',
+        created_by: '김강사',
+        created_at: '2026-06-01T10:00:00Z',
+      }),
+      normalizeFeedbackItem({
+        feedback_id: 2,
+        type: 'HIGHLIGHT',
+        content: '이전 제출 줄 코멘트',
+        created_by: '김강사',
+        created_at: '2026-06-01T11:00:00Z',
+        start_line: 1,
+        end_line: 1,
+      }),
+    ]
+
+    const filtered = filterFeedbacksForSubmission(feedbacks, '2026-06-03T10:00:00Z')
+
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0]?.type).toBe('COMMENT')
+    expect(filtered[0]?.feedback_id).toBe(1)
   })
 })

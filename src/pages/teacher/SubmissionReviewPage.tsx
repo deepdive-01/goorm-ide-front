@@ -5,6 +5,7 @@ import Spinner from '@/components/common/Spinner/Spinner'
 import ProblemDetailView from '@/components/problem/ProblemDetailView'
 import TeacherCodeCommentsPanel from '@/components/teacher/submissionReview/TeacherCodeCommentsPanel'
 import TeacherOverallFeedbackPanel from '@/components/teacher/submissionReview/TeacherOverallFeedbackPanel'
+import TeacherPastFeedbackPanel from '@/components/teacher/submissionReview/TeacherPastFeedbackPanel'
 import TeacherStudentCodeSection from '@/components/teacher/submissionReview/TeacherStudentCodeSection'
 import TeacherSubmissionReviewSubHeader from '@/components/teacher/submissionReview/TeacherSubmissionReviewSubHeader'
 import {
@@ -22,8 +23,9 @@ import { useProblems } from '@/hooks/useProblems'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { getRoleSpacesPath } from '@/lib/authRoutes'
 import {
-  findOverallFeedbackComment,
+  mapCommentToStudentSubmissionFeedback,
   mapHighlightsToTeacherLineComments,
+  splitOverallFeedbacksForSubmission,
 } from '@/lib/feedbackMapper'
 import { toEditorLanguage } from '@/lib/problemLanguage'
 import { buildTeacherLineSelection, type TeacherLineSelection } from '@/lib/teacherLineComment'
@@ -87,13 +89,20 @@ function SubmissionReviewContent({
     [feedbacks],
   )
 
-  const overallFromFeedbacks = useMemo(() => {
-    const overall = findOverallFeedbackComment(feedbacks)
+  const { pastOverallFeedbacks, currentOverallFromFeedbacks } = useMemo(() => {
+    const { current, past } = splitOverallFeedbacksForSubmission(
+      feedbacks,
+      review?.submittedAt ?? '',
+    )
+
     return {
-      content: overall?.content ?? '',
-      id: overall?.feedback_id ?? null,
+      pastOverallFeedbacks: past.map(mapCommentToStudentSubmissionFeedback),
+      currentOverallFromFeedbacks: {
+        content: current?.content ?? '',
+        id: current?.feedback_id ?? null,
+      },
     }
-  }, [feedbacks])
+  }, [feedbacks, review?.submittedAt])
 
   const [overallDraft, setOverallDraft] = useState<{
     content: string
@@ -102,17 +111,17 @@ function SubmissionReviewContent({
 
   const overallFeedback =
     overallDraft?.content ??
-    (isFeedbacksLoading ? '' : overallFromFeedbacks.content)
-  const overallFeedbackId = overallDraft?.id ?? overallFromFeedbacks.id
+    (isFeedbacksLoading ? '' : currentOverallFromFeedbacks.content)
+  const overallFeedbackId = overallDraft?.id ?? currentOverallFromFeedbacks.id
 
   const handleOverallFeedbackChange = useCallback(
     (content: string) => {
       setOverallDraft((previous) => ({
         content,
-        id: previous?.id ?? overallFromFeedbacks.id,
+        id: previous?.id ?? currentOverallFromFeedbacks.id,
       }))
     },
-    [overallFromFeedbacks.id],
+    [currentOverallFromFeedbacks.id],
   )
 
   const [lineSelection, setLineSelection] = useState<TeacherLineSelection | null>(null)
@@ -188,6 +197,11 @@ function SubmissionReviewContent({
     if (!review) return
 
     const trimmed = overallFeedback.trim()
+    if (!trimmed) {
+      setActionError(TEACHER_SUBMISSION_REVIEW_COPY.overallFeedbackRequired)
+      return
+    }
+
     if (trimmed.length > TEACHER_OVERALL_FEEDBACK_MAX_LENGTH) {
       setActionError(TEACHER_SUBMISSION_REVIEW_COPY.overallFeedbackMaxLength)
       return
@@ -197,15 +211,13 @@ function SubmissionReviewContent({
     setActionError(null)
 
     try {
-      if (trimmed) {
-        if (overallFeedbackId) {
-          await updateFeedback(overallFeedbackId, { content: trimmed })
-        } else {
-          await createComment({
-            submission_id: review.submissionId,
-            content: trimmed,
-          })
-        }
+      if (overallFeedbackId) {
+        await updateFeedback(overallFeedbackId, { content: trimmed })
+      } else {
+        await createComment({
+          submission_id: review.submissionId,
+          content: trimmed,
+        })
       }
 
       navigate(`/teacher/spaces/${spaceId}`)
@@ -278,13 +290,8 @@ function SubmissionReviewContent({
         onBack={() => navigate(`/teacher/spaces/${spaceId}`)}
         onSave={handleSave}
         isSaving={isSaving}
+        error={actionError}
       />
-
-      {actionError && (
-        <p className="text-body2 text-red-400 mx-auto w-full max-w-[1512px] px-4 sm:px-16 lg:px-22">
-          {actionError}
-        </p>
-      )}
 
       <main className="mx-auto flex min-h-0 w-full max-w-[1512px] flex-1 flex-col gap-6 px-4 py-6 sm:px-16 lg:px-22 lg:py-8">
         <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-2">
@@ -313,6 +320,7 @@ function SubmissionReviewContent({
               comments={lineComments}
               onRemove={handleRemoveLineComment}
             />
+            <TeacherPastFeedbackPanel items={pastOverallFeedbacks} />
             <TeacherOverallFeedbackPanel
               value={overallFeedback}
               onChange={handleOverallFeedbackChange}

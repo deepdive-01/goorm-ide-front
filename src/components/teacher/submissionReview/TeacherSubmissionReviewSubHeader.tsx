@@ -9,6 +9,7 @@ type TeacherSubmissionReviewSubHeaderProps = {
   onBack: () => void
   onSave: () => void
   isSaving?: boolean
+  error?: string | null
 }
 
 const SAVE_BTN = {
@@ -24,6 +25,7 @@ function TeacherSubmissionReviewSubHeader({
   onBack,
   onSave,
   isSaving = false,
+  error = null,
 }: TeacherSubmissionReviewSubHeaderProps) {
   const copy = TEACHER_SUBMISSION_REVIEW_COPY
 
@@ -40,10 +42,17 @@ function TeacherSubmissionReviewSubHeader({
           </h1>
         </div>
 
-        <Button onClick={onSave} isLoading={isSaving} {...SAVE_BTN}>
-          <Save className="size-4 shrink-0" aria-hidden />
-          {copy.save}
-        </Button>
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+          {error && (
+            <p className="text-body3 max-w-md text-right text-red-400" role="alert">
+              {error}
+            </p>
+          )}
+          <Button onClick={onSave} isLoading={isSaving} {...SAVE_BTN}>
+            <Save className="size-4 shrink-0" aria-hidden />
+            {copy.save}
+          </Button>
+        </div>
       </div>
     </div>
   )
