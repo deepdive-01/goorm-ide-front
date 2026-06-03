@@ -171,13 +171,16 @@ describe('submissionMapper', () => {
     })
   })
 
-  it('피드백 목록 API 결과로 완료된 제출의 댓글 수만 보강한다', async () => {
+  it('제출 중인 항목도 피드백 API를 조회해 전체 피드백 여부를 보강한다', async () => {
+    vi.mocked(getFeedbacks).mockClear()
     mockActiveSubmission({ student_id: 2 })
     vi.mocked(getFeedbacks).mockImplementation(async (submissionId) => {
       if (submissionId === 1) {
-        return { data: { data: [{ feedback_id: 1 }] } } as Awaited<
-          ReturnType<typeof getFeedbacks>
-        >
+        return {
+          data: {
+            data: [{ feedback_id: 1, type: 'COMMENT', created_at: '2026-06-01T10:00:00Z' }],
+          },
+        } as Awaited<ReturnType<typeof getFeedbacks>>
       }
 
       return { data: { data: [] } } as unknown as Awaited<
@@ -208,13 +211,15 @@ describe('submissionMapper', () => {
       },
     ])
 
+    expect(getFeedbacks).toHaveBeenCalledTimes(2)
     expect(result[0]?.commentCount).toBe(0)
     expect(result[0]?.feedbackStatus).toBe('PENDING')
     expect(result[1]?.commentCount).toBe(0)
     expect(result[1]?.feedbackStatus).toBe('PENDING')
   })
 
-  it('완료된 제출만 피드백 목록을 조회해 현재 제출 회차 댓글 수를 채운다', async () => {
+  it('현재 제출 회차 줄 코멘트 수만 댓글 수에 반영한다', async () => {
+    vi.mocked(getFeedbacks).mockClear()
     vi.mocked(getSubmission).mockImplementation(async (_problemId, studentId) => {
       if (studentId === 3) {
         return {
@@ -246,8 +251,30 @@ describe('submissionMapper', () => {
         return {
           data: {
             data: [
-              { feedback_id: 1, created_at: '2026-06-03T12:00:00Z' },
-              { feedback_id: 2, created_at: '2026-06-01T10:00:00Z' },
+              {
+                feedback_id: 1,
+                type: 'COMMENT',
+                created_at: '2026-06-01T09:00:00Z',
+              },
+              {
+                feedback_id: 4,
+                type: 'COMMENT',
+                created_at: '2026-06-03T11:00:00Z',
+              },
+              {
+                feedback_id: 2,
+                type: 'HIGHLIGHT',
+                created_at: '2026-06-03T12:00:00Z',
+                start_line: 1,
+                end_line: 1,
+              },
+              {
+                feedback_id: 3,
+                type: 'HIGHLIGHT',
+                created_at: '2026-06-01T10:00:00Z',
+                start_line: 2,
+                end_line: 2,
+              },
             ],
           },
         } as Awaited<ReturnType<typeof getFeedbacks>>
@@ -281,7 +308,7 @@ describe('submissionMapper', () => {
       },
     ])
 
-    expect(getFeedbacks).toHaveBeenCalledTimes(1)
+    expect(getFeedbacks).toHaveBeenCalledTimes(2)
     expect(getFeedbacks).toHaveBeenCalledWith(2)
     expect(result[0]?.commentCount).toBe(0)
     expect(result[0]?.feedbackStatus).toBe('PENDING')
@@ -289,14 +316,26 @@ describe('submissionMapper', () => {
     expect(result[1]?.feedbackStatus).toBe('COMPLETED')
   })
 
-  it('재제출 후 has_feedback이 true여도 submitted_at 이전 피드백은 무시하고 대기 중으로 표시한다', async () => {
+  it('재제출 후 이전 전체 피드백만 있으면 대기 중으로 표시하고 줄 코멘트는 0이다', async () => {
     vi.mocked(getFeedbacks).mockClear()
     mockActiveSubmission({ id: 99, student_id: 2 })
     vi.mocked(getFeedbacks).mockResolvedValue({
       data: {
         data: [
-          { feedback_id: 1, created_at: '2026-06-01T10:00:00Z' },
-          { feedback_id: 2, created_at: '2026-06-01T11:00:00Z' },
+          {
+            feedback_id: 1,
+            type: 'COMMENT',
+            content: '이전 제출 피드백',
+            created_at: '2026-06-01T10:00:00Z',
+          },
+          {
+            feedback_id: 2,
+            type: 'HIGHLIGHT',
+            content: '이전 제출 줄 코멘트',
+            created_at: '2026-06-01T11:00:00Z',
+            start_line: 1,
+            end_line: 1,
+          },
         ],
       },
     } as Awaited<ReturnType<typeof getFeedbacks>>)
@@ -318,12 +357,20 @@ describe('submissionMapper', () => {
     expect(item?.feedbackStatus).toBe('PENDING')
   })
 
-  it('목록 submitted_at이 갱신되지 않아도 제출 상세 updated_at으로 재제출을 판별한다', async () => {
+  it('목록 submitted_at이 갱신되지 않아도 제출 상세 updated_at으로 줄 코멘트 회차를 판별한다', async () => {
     vi.mocked(getFeedbacks).mockClear()
     mockActiveSubmission({ id: 99, student_id: 2 })
     vi.mocked(getFeedbacks).mockResolvedValue({
       data: {
-        data: [{ feedback_id: 1, created_at: '2026-06-02T10:00:00Z' }],
+        data: [
+          {
+            feedback_id: 1,
+            type: 'HIGHLIGHT',
+            created_at: '2026-06-02T10:00:00Z',
+            start_line: 1,
+            end_line: 1,
+          },
+        ],
       },
     } as Awaited<ReturnType<typeof getFeedbacks>>)
 
@@ -344,11 +391,21 @@ describe('submissionMapper', () => {
     expect(item?.commentCount).toBe(0)
   })
 
-  it('재제출 등으로 has_feedback이 false이면 피드백 API를 조회하지 않는다', async () => {
+  it('재제출 후 has_feedback이 false이고 현재 회차 피드백이 없으면 대기 중으로 표시한다', async () => {
     vi.mocked(getFeedbacks).mockClear()
     mockActiveSubmission({ id: 99, student_id: 2 })
     vi.mocked(getFeedbacks).mockResolvedValue({
-      data: { data: [{ feedback_id: 1 }, { feedback_id: 2 }] },
+      data: {
+        data: [
+          {
+            feedback_id: 1,
+            type: 'COMMENT',
+            content: '이전 제출 피드백',
+            created_at: '2026-01-01T00:00:00Z',
+          },
+          { feedback_id: 2, type: 'HIGHLIGHT', created_at: '2026-01-02T00:00:00Z', start_line: 1, end_line: 1 },
+        ],
+      },
     } as Awaited<ReturnType<typeof getFeedbacks>>)
 
     const [item] = await attachSubmissionFeedbackCounts([
@@ -364,7 +421,7 @@ describe('submissionMapper', () => {
       },
     ])
 
-    expect(getFeedbacks).not.toHaveBeenCalled()
+    expect(getFeedbacks).toHaveBeenCalledWith(99)
     expect(item?.commentCount).toBe(0)
     expect(item?.feedbackStatus).toBe('PENDING')
   })

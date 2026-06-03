@@ -1,8 +1,9 @@
 import { getSubmission } from '@/services/file'
 import { getFeedbacks } from '@/services/feedback'
 import {
-  filterFeedbacksForSubmission,
+  filterHighlightsForSubmission,
   normalizeFeedbackList,
+  splitOverallFeedbacksForSubmission,
 } from '@/lib/feedbackMapper'
 import type { SubmissionDetail } from '@/types/file.type'
 import type {
@@ -142,8 +143,14 @@ export function mapSubmissionToTeacherListItem(
   }
 }
 
-function countValidFeedbacks(data: unknown, submittedAt: string): number {
-  return filterFeedbacksForSubmission(normalizeFeedbackList(data), submittedAt).length
+function countSubmissionFeedbackSummary(data: unknown, cutoffAt: string) {
+  const feedbacks = normalizeFeedbackList(data)
+  const { current } = splitOverallFeedbacksForSubmission(feedbacks, cutoffAt)
+
+  return {
+    hasCurrentOverallFeedback: current !== undefined,
+    lineCommentCount: filterHighlightsForSubmission(feedbacks, cutoffAt).length,
+  }
 }
 
 /** 제출 상세 updated_at을 우선해 현재 제출 회차 기준 시각을 구한다 */
@@ -159,18 +166,16 @@ export function resolveSubmissionFeedbackCutoff(
 }
 
 function resolveFeedbackStatus(
-  apiStatus: TeacherSpaceSubmissionListItem['feedbackStatus'],
-  validCommentCount: number,
+  hasCurrentOverallFeedback: boolean,
 ): TeacherSpaceSubmissionListItem['feedbackStatus'] {
-  return apiStatus === 'COMPLETED' && validCommentCount > 0 ? 'COMPLETED' : 'PENDING'
+  return hasCurrentOverallFeedback ? 'COMPLETED' : 'PENDING'
 }
 
 /**
  * 제출 현황 목록 보강 규칙
  * - 제출 취소(submitted_code 없음): 목록에서 제외
- * - 제출 중 + 피드백 없음: 대기 중, 댓글 0
- * - 제출 중 + 재제출: submitted_at/updated_at 이후 피드백만 유효, 없으면 대기 중
- * - 제출 중 + 피드백 완료: 유효 피드백 수 표시
+ * - 전체 피드백(COMMENT): 현재 제출 회차에 남긴 것만 피드백 완료로 표시
+ * - 줄 코멘트(HIGHLIGHT): submitted_at/updated_at 이후만 표시·집계
  */
 async function enrichSubmissionListItem(
   submission: TeacherSpaceSubmissionListItem,
@@ -186,36 +191,25 @@ async function enrichSubmissionListItem(
     const submittedAt = detail.updated_at || submission.submittedAt
     const cutoffAt = resolveSubmissionFeedbackCutoff(detail, submission.submittedAt)
 
-    if (submission.feedbackStatus === 'PENDING') {
-      return {
-        ...submission,
-        submittedAt,
-        feedbackStatus: 'PENDING',
-        commentCount: 0,
-      }
-    }
+    const summary = await getFeedbacks(submission.id)
+      .then(({ data: feedbackData }) =>
+        countSubmissionFeedbackSummary(feedbackData.data, cutoffAt),
+      )
+      .catch(() => ({ hasCurrentOverallFeedback: false, lineCommentCount: 0 }))
 
-    const validCommentCount = await getFeedbacks(submission.id)
-      .then(({ data: feedbackData }) => countValidFeedbacks(feedbackData.data, cutoffAt))
-      .catch(() => 0)
-
-    const feedbackStatus = resolveFeedbackStatus(submission.feedbackStatus, validCommentCount)
+    const feedbackStatus = resolveFeedbackStatus(summary.hasCurrentOverallFeedback)
 
     return {
       ...submission,
       submittedAt,
       feedbackStatus,
-      commentCount: feedbackStatus === 'COMPLETED' ? validCommentCount : 0,
+      commentCount: summary.lineCommentCount,
     }
   } catch {
-    if (submission.feedbackStatus === 'PENDING') {
-      return {
-        ...submission,
-        commentCount: 0,
-      }
+    return {
+      ...submission,
+      commentCount: 0,
     }
-
-    return submission
   }
 }
 

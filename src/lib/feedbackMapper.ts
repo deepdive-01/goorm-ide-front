@@ -73,8 +73,7 @@ export function normalizeFeedbackList(value: unknown): FeedbackItem[] {
   return value.map((item) => normalizeFeedbackItem(item))
 }
 
-/** 재제출 이후 피드백만 남긴다 — created_at이 submitted_at 이전이면 이전 제출 회차 피드백 */
-export function filterFeedbacksForSubmission(
+function filterFeedbacksBySubmittedAt(
   feedbacks: FeedbackItem[],
   submittedAt: string,
 ): FeedbackItem[] {
@@ -91,6 +90,28 @@ export function filterFeedbacksForSubmission(
     const createdTime = Date.parse(feedback.created_at)
     return Number.isFinite(createdTime) && createdTime >= submittedTime
   })
+}
+
+/** 재제출 이후 줄 코멘트(HIGHLIGHT)만 남긴다 */
+export function filterHighlightsForSubmission(
+  feedbacks: FeedbackItem[],
+  submittedAt: string,
+): FeedbackItem[] {
+  return filterFeedbacksBySubmittedAt(
+    feedbacks.filter((feedback) => feedback.type === 'HIGHLIGHT'),
+    submittedAt,
+  )
+}
+
+/** 전체 피드백(COMMENT)은 재제출 후에도 유지하고, 줄 코멘트만 회차 기준으로 필터한다 */
+export function filterFeedbacksForSubmission(
+  feedbacks: FeedbackItem[],
+  submittedAt: string,
+): FeedbackItem[] {
+  const overallFeedbacks = feedbacks.filter((feedback) => feedback.type === 'COMMENT')
+  const lineComments = filterHighlightsForSubmission(feedbacks, submittedAt)
+
+  return [...overallFeedbacks, ...lineComments]
 }
 
 export function formatFeedbackDateTime(iso: string) {
@@ -121,6 +142,65 @@ export function findOverallFeedbackComment(
   feedbacks: FeedbackItem[],
 ): FeedbackItem | undefined {
   return feedbacks.find((item) => item.type === 'COMMENT')
+}
+
+function compareFeedbackNewestFirst(a: FeedbackItem, b: FeedbackItem) {
+  const aTime = Date.parse(a.created_at)
+  const bTime = Date.parse(b.created_at)
+
+  if (Number.isFinite(aTime) && Number.isFinite(bTime) && aTime !== bTime) {
+    return bTime - aTime
+  }
+
+  return b.feedback_id - a.feedback_id
+}
+
+/** 현재 제출 회차 전체 피드백과 과거 회차 로그를 분리한다 */
+export function splitOverallFeedbacksForSubmission(
+  feedbacks: FeedbackItem[],
+  submittedAt: string,
+): { current: FeedbackItem | undefined; past: FeedbackItem[] } {
+  const comments = feedbacks.filter((item) => item.type === 'COMMENT')
+
+  if (comments.length === 0) {
+    return { current: undefined, past: [] }
+  }
+
+  if (!submittedAt) {
+    const sorted = [...comments].sort(compareFeedbackNewestFirst)
+    return { current: sorted[0], past: sorted.slice(1) }
+  }
+
+  const submittedTime = Date.parse(submittedAt)
+  if (!Number.isFinite(submittedTime)) {
+    const sorted = [...comments].sort(compareFeedbackNewestFirst)
+    return { current: sorted[0], past: sorted.slice(1) }
+  }
+
+  const past: FeedbackItem[] = []
+  let current: FeedbackItem | undefined
+
+  for (const comment of comments) {
+    const createdTime = Date.parse(comment.created_at)
+
+    if (Number.isFinite(createdTime) && createdTime >= submittedTime) {
+      if (
+        !current ||
+        createdTime > Date.parse(current.created_at) ||
+        (createdTime === Date.parse(current.created_at) &&
+          comment.feedback_id > current.feedback_id)
+      ) {
+        current = comment
+      }
+      continue
+    }
+
+    past.push(comment)
+  }
+
+  past.sort(compareFeedbackNewestFirst)
+
+  return { current, past }
 }
 
 export function mapCommentToStudentSubmissionFeedback(

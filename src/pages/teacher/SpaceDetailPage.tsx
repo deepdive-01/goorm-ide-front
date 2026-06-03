@@ -140,10 +140,6 @@ function ProblemManagementRow({ index, problem, spaceId }: ProblemManagementRowP
 
         <div className="flex flex-wrap items-center justify-end gap-3">
           <ProblemActionChip
-            label={TEACHER_SPACE_DETAIL_COPY.problemSubmissionStatus}
-            greenOnHover
-          />
-          <ProblemActionChip
             label={TEACHER_SPACE_DETAIL_COPY.editProblem}
             greenOnHover
             onClick={() =>

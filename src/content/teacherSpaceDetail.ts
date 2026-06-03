@@ -9,7 +9,6 @@ export const TEACHER_SPACE_DETAIL_COPY = {
   feedbackComplete: '피드백 완료',
   problemManagement: '문항 관리',
   submissionStatus: '제출 현황',
-  problemSubmissionStatus: '제출 현황',
   editProblem: '수정',
   feedbackPending: '대기 중',
   feedbackCompleted: '피드백 완료',
