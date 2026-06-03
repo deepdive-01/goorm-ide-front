@@ -1,0 +1,17 @@
+export const STUDENT_SPACES_COPY = {
+  title: '스페이스',
+  subtitle: '강사들의 스페이스를 둘러보고 학습을 시작하세요',
+  searchPlaceholder: '스페이스 또는 강사 검색...',
+  joinCodeButton: '참여코드 입력',
+  joinDialogTitle: '참여 코드 입력',
+  joinLabel: '참여 코드',
+  joinPlaceholder: '참여 코드를 입력하세요',
+  joinSubmit: '참여하기',
+  joinCancel: '취소',
+  problemCount: (count: number) => `${count} 문항`,
+  memberCount: (count: number) => String(count),
+  lectureCount: (count: number) => String(count),
+  emptyTitle: '표시할 스페이스가 없습니다',
+  emptyDescription: '참여 코드로 스페이스에 참여해 보세요.',
+  joinError: '참여 코드가 올바르지 않거나 만료되었습니다.',
+} as const
