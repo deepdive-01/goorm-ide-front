@@ -151,6 +151,82 @@ describe('SubmissionReviewPage', () => {
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument()
   })
 
+  test('재제출 이전 전체 피드백은 과거 피드백 로그로 표시하고 입력란은 비운다', async () => {
+    vi.mocked(useTeacherSubmissionReview).mockReturnValue({
+      review: {
+        ...mockReview,
+        submittedAt: '2026-06-03T10:00:00Z',
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    })
+
+    vi.mocked(useSubmissionFeedbacks).mockReturnValue({
+      feedbacks: [
+        {
+          feedback_id: 10,
+          type: 'COMMENT',
+          content: '네확인이요',
+          created_by: '이채원',
+          created_at: '2026-06-03T09:12:00Z',
+        },
+      ],
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    })
+
+    renderWithRouter(
+      <Routes>
+        <Route
+          path="/teacher/spaces/:spaceId/submissions/:submissionId"
+          element={<SubmissionReviewPage />}
+        />
+      </Routes>,
+      { route: '/teacher/spaces/1/submissions/1' },
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('과거 피드백')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('네확인이요')).toBeInTheDocument()
+    expect(screen.getByText('이채원')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('학생에게 전달할 전체 피드백을 작성하세요.')).toHaveValue(
+      '',
+    )
+  })
+
+  test('전체 피드백 없이 저장하면 안내 메시지를 표시하고 이동하지 않는다', async () => {
+    const user = userEvent.setup()
+    const { createComment } = await import('@/services/feedback')
+
+    renderWithRouter(
+      <Routes>
+        <Route
+          path="/teacher/spaces/:spaceId/submissions/:submissionId"
+          element={<SubmissionReviewPage />}
+        />
+        <Route path="/teacher/spaces/:spaceId" element={<div>스페이스 상세</div>} />
+      </Routes>,
+      { route: '/teacher/spaces/1/submissions/1' },
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '저장' })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('전체 피드백을 입력해주세요')).toBeInTheDocument()
+    })
+
+    expect(createComment).not.toHaveBeenCalled()
+    expect(screen.queryByText('스페이스 상세')).not.toBeInTheDocument()
+  })
+
   test('코드 코멘트를 삭제할 수 있다', async () => {
     const user = userEvent.setup()
     const { deleteFeedback } = await import('@/services/feedback')

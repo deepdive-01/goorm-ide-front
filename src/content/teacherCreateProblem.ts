@@ -20,7 +20,7 @@ export const TEACHER_CREATE_PROBLEM_COPY = {
   titlePlaceholder: '예: 두 수의 합',
   languageLabel: '프로그래밍 언어',
   descriptionLabel: '문제 설명',
-  descriptionPlaceholder: '문제 설명을 작성하세요. Markdown 형식을 지원합니다.',
+  descriptionPlaceholder: '문제 설명을 작성하세요.',
   starterCodeTitle: '시작 코드',
   starterCodeDescription: '학생에게 제공될 기본 코드입니다.',
   testcasesTitle: '테스트 케이스',
@@ -38,7 +38,6 @@ export const TEACHER_CREATE_PROBLEM_COPY = {
   tips: [
     '숨김 테스트 케이스는 학생에게 보이지 않지만 채점에 사용됩니다.',
     '다양한 엣지 케이스를 포함하면 더 좋은 문항이 됩니다.',
-    '문제 설명에 Markdown 문법을 사용할 수 있습니다.',
   ],
 } as const
 
