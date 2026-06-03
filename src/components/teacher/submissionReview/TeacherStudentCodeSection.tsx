@@ -40,7 +40,7 @@ function TeacherStudentCodeSection({
   return (
     <Card
       width="w-full"
-      className={`bg-[#0d0d0d] border-gray-800 flex min-h-0 min-w-0 flex-col overflow-hidden px-0 py-0 ${TEACHER_REVIEW_STUDENT_CODE_SCROLL_MAX_CLASS}`}
+      className={`bg-[#0d0d0d] border-gray-800 flex min-h-0 min-w-0 flex-col overflow-hidden !px-0 !py-0 ${TEACHER_REVIEW_STUDENT_CODE_SCROLL_MAX_CLASS}`}
     >
       <header className="shrink-0 px-7 pt-6 pb-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

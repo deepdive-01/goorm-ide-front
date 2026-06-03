@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  filterFeedbacksForSubmission,
   findOverallFeedbackComment,
   mapFeedbacksToStudentViews,
   mapHighlightsToTeacherLineComments,
@@ -106,5 +107,35 @@ describe('feedbackMapper', () => {
       lineNumber: 2,
       endLineNumber: 5,
     })
+  })
+
+  it('submitted_at 이전 피드백은 재제출 회차에서 제외한다', () => {
+    const feedbacks = [
+      normalizeFeedbackItem({
+        feedback_id: 1,
+        type: 'HIGHLIGHT',
+        content: '이전 제출 코멘트',
+        created_by: '김강사',
+        created_at: '2026-06-01T10:00:00Z',
+        start_line: 1,
+        end_line: 1,
+      }),
+      normalizeFeedbackItem({
+        feedback_id: 2,
+        type: 'HIGHLIGHT',
+        content: '현재 제출 코멘트',
+        created_by: '김강사',
+        created_at: '2026-06-03T11:00:00Z',
+        start_line: 2,
+        end_line: 2,
+      }),
+    ]
+
+    expect(
+      filterFeedbacksForSubmission(feedbacks, '2026-06-03T10:00:00Z'),
+    ).toHaveLength(1)
+    expect(
+      filterFeedbacksForSubmission(feedbacks, '2026-06-03T10:00:00Z')[0]?.feedback_id,
+    ).toBe(2)
   })
 })

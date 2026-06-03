@@ -27,7 +27,7 @@ function StudentCodeCommentCard({
   ]
 
   return (
-    <article className="flex w-full flex-col gap-2.5 overflow-visible rounded-xl bg-gray-900 px-7 py-6">
+    <article className="flex w-full flex-col gap-2.5 overflow-visible rounded-xl bg-gray-900 px-5 py-5">
       <header className="flex flex-wrap items-center gap-3">
         <span className="text-body1 font-semibold text-light-background">
           {comment.authorName}

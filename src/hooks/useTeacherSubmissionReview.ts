@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { findTeacherSpaceSubmission } from '@/lib/findSpaceSubmission'
 import { getSubmission } from '@/services/file'
 import { getFeedbacks } from '@/services/feedback'
-import { normalizeFeedbackList } from '@/lib/feedbackMapper'
+import { normalizeFeedbackList, filterFeedbacksForSubmission } from '@/lib/feedbackMapper'
 import type { ProblemListItem } from '@/types/problem.type'
 
 export type TeacherSubmissionReviewContext = {
@@ -95,7 +95,9 @@ export function useTeacherSubmissionReview(
             problemId: listItem.problemId,
             studentId: listItem.studentId,
             studentNickname: listItem.studentNickname,
-            submittedAt: listItem.submittedAt || detail.updated_at || detail.created_at,
+            submittedAt: detail.submitted_code
+              ? detail.updated_at || listItem.submittedAt || detail.created_at
+              : listItem.submittedAt || detail.updated_at || detail.created_at,
             code,
           })
         }
@@ -120,8 +122,9 @@ export function useTeacherSubmissionReview(
   return { review, isLoading, error, refetch }
 }
 
-export function useSubmissionFeedbacks(submissionId: number) {
-  const isEnabled = Number.isFinite(submissionId) && submissionId > 0
+export function useSubmissionFeedbacks(submissionId: number, submittedAt = '') {
+  const isEnabled =
+    Number.isFinite(submissionId) && submissionId > 0 && submittedAt.length > 0
 
   const [feedbacks, setFeedbacks] = useState<ReturnType<typeof normalizeFeedbackList>>([])
   const [loadedSubmissionId, setLoadedSubmissionId] = useState<number | null>(null)
@@ -147,7 +150,9 @@ export function useSubmissionFeedbacks(submissionId: number) {
       try {
         const { data } = await getFeedbacks(submissionId)
         if (isMounted) {
-          setFeedbacks(normalizeFeedbackList(data.data))
+          setFeedbacks(
+            filterFeedbacksForSubmission(normalizeFeedbackList(data.data), submittedAt),
+          )
           setLoadedSubmissionId(submissionId)
         }
       } catch {
@@ -164,7 +169,7 @@ export function useSubmissionFeedbacks(submissionId: number) {
     return () => {
       isMounted = false
     }
-  }, [isEnabled, submissionId, reloadKey])
+  }, [isEnabled, submissionId, submittedAt, reloadKey])
 
   if (!isEnabled) {
     return {

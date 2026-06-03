@@ -73,6 +73,26 @@ export function normalizeFeedbackList(value: unknown): FeedbackItem[] {
   return value.map((item) => normalizeFeedbackItem(item))
 }
 
+/** 재제출 이후 피드백만 남긴다 — created_at이 submitted_at 이전이면 이전 제출 회차 피드백 */
+export function filterFeedbacksForSubmission(
+  feedbacks: FeedbackItem[],
+  submittedAt: string,
+): FeedbackItem[] {
+  if (!submittedAt) {
+    return feedbacks
+  }
+
+  const submittedTime = Date.parse(submittedAt)
+  if (!Number.isFinite(submittedTime)) {
+    return feedbacks
+  }
+
+  return feedbacks.filter((feedback) => {
+    const createdTime = Date.parse(feedback.created_at)
+    return Number.isFinite(createdTime) && createdTime >= submittedTime
+  })
+}
+
 export function formatFeedbackDateTime(iso: string) {
   return formatApiDateTime(iso)
 }

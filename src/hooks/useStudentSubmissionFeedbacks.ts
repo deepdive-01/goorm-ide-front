@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { mapFeedbacksToStudentViews, normalizeFeedbackList } from '@/lib/feedbackMapper'
+import { mapFeedbacksToStudentViews, normalizeFeedbackList, filterFeedbacksForSubmission } from '@/lib/feedbackMapper'
 import { getSubmission } from '@/services/file'
 import { getFeedbacks } from '@/services/feedback'
 import type {
@@ -67,7 +67,11 @@ export function useStudentSubmissionFeedbacks(
         }
 
         const { data: feedbackResponse } = await getFeedbacks(submissionId)
-        const feedbacks = normalizeFeedbackList(feedbackResponse.data)
+        const submittedAt = detail.submitted_code ? detail.updated_at : ''
+        const feedbacks = filterFeedbacksForSubmission(
+          normalizeFeedbackList(feedbackResponse.data),
+          submittedAt,
+        )
         const views = mapFeedbacksToStudentViews(feedbacks)
 
         if (isMounted) {

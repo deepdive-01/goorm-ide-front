@@ -1,4 +1,10 @@
+import { getSubmission } from '@/services/file'
 import { getFeedbacks } from '@/services/feedback'
+import {
+  filterFeedbacksForSubmission,
+  normalizeFeedbackList,
+} from '@/lib/feedbackMapper'
+import type { SubmissionDetail } from '@/types/file.type'
 import type {
   SubmissionItem,
   SubmissionList,
@@ -136,15 +142,84 @@ export function mapSubmissionToTeacherListItem(
   }
 }
 
-function countFeedbacksPayload(data: unknown): number {
-  if (!Array.isArray(data)) {
-    return 0
-  }
-
-  return data.length
+function countValidFeedbacks(data: unknown, submittedAt: string): number {
+  return filterFeedbacksForSubmission(normalizeFeedbackList(data), submittedAt).length
 }
 
-/** 제출별 피드백 목록 API로 댓글 수·피드백 상태를 보강한다 */
+/** 제출 상세 updated_at을 우선해 현재 제출 회차 기준 시각을 구한다 */
+export function resolveSubmissionFeedbackCutoff(
+  detail: SubmissionDetail,
+  listSubmittedAt: string,
+): string {
+  if (!detail.submitted_code) {
+    return ''
+  }
+
+  return detail.updated_at || listSubmittedAt
+}
+
+function resolveFeedbackStatus(
+  apiStatus: TeacherSpaceSubmissionListItem['feedbackStatus'],
+  validCommentCount: number,
+): TeacherSpaceSubmissionListItem['feedbackStatus'] {
+  return apiStatus === 'COMPLETED' && validCommentCount > 0 ? 'COMPLETED' : 'PENDING'
+}
+
+/**
+ * 제출 현황 목록 보강 규칙
+ * - 제출 취소(submitted_code 없음): 목록에서 제외
+ * - 제출 중 + 피드백 없음: 대기 중, 댓글 0
+ * - 제출 중 + 재제출: submitted_at/updated_at 이후 피드백만 유효, 없으면 대기 중
+ * - 제출 중 + 피드백 완료: 유효 피드백 수 표시
+ */
+async function enrichSubmissionListItem(
+  submission: TeacherSpaceSubmissionListItem,
+): Promise<TeacherSpaceSubmissionListItem | null> {
+  try {
+    const { data } = await getSubmission(submission.problemId, submission.studentId)
+    const detail = data.data
+
+    if (!detail.submitted_code) {
+      return null
+    }
+
+    const submittedAt = detail.updated_at || submission.submittedAt
+    const cutoffAt = resolveSubmissionFeedbackCutoff(detail, submission.submittedAt)
+
+    if (submission.feedbackStatus === 'PENDING') {
+      return {
+        ...submission,
+        submittedAt,
+        feedbackStatus: 'PENDING',
+        commentCount: 0,
+      }
+    }
+
+    const validCommentCount = await getFeedbacks(submission.id)
+      .then(({ data: feedbackData }) => countValidFeedbacks(feedbackData.data, cutoffAt))
+      .catch(() => 0)
+
+    const feedbackStatus = resolveFeedbackStatus(submission.feedbackStatus, validCommentCount)
+
+    return {
+      ...submission,
+      submittedAt,
+      feedbackStatus,
+      commentCount: feedbackStatus === 'COMPLETED' ? validCommentCount : 0,
+    }
+  } catch {
+    if (submission.feedbackStatus === 'PENDING') {
+      return {
+        ...submission,
+        commentCount: 0,
+      }
+    }
+
+    return submission
+  }
+}
+
+/** 제출 상세·피드백 API로 제출 현황 목록을 보강한다 */
 export async function attachSubmissionFeedbackCounts(
   submissions: TeacherSpaceSubmissionListItem[],
 ): Promise<TeacherSpaceSubmissionListItem[]> {
@@ -152,30 +227,7 @@ export async function attachSubmissionFeedbackCounts(
     return []
   }
 
-  const uniqueSubmissionIds = [...new Set(submissions.map((item) => item.id))]
-  const commentCountBySubmissionId = new Map<number, number>()
+  const results = await Promise.all(submissions.map(enrichSubmissionListItem))
 
-  await Promise.all(
-    uniqueSubmissionIds.map(async (submissionId) => {
-      try {
-        const { data } = await getFeedbacks(submissionId)
-        commentCountBySubmissionId.set(
-          submissionId,
-          countFeedbacksPayload(data.data),
-        )
-      } catch {
-        commentCountBySubmissionId.set(submissionId, 0)
-      }
-    }),
-  )
-
-  return submissions.map((submission) => {
-    const commentCount = commentCountBySubmissionId.get(submission.id) ?? 0
-
-    return {
-      ...submission,
-      commentCount,
-      feedbackStatus: commentCount > 0 ? 'COMPLETED' : 'PENDING',
-    }
-  })
+  return results.filter((item): item is TeacherSpaceSubmissionListItem => item !== null)
 }
